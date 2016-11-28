@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
     "summary": "Open Language Web",
-    "repository": "https://github.com/zynque/olw-p4",
+    "repository": "https://github.com/zynque/olw-p4.git",
     "license": "MIT",
     "source-directories": [
         "."
