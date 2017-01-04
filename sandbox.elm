@@ -5,6 +5,7 @@ import Html.App as Html
 import Html.Events exposing (onClick)
 import Olw.Document exposing (..)
 import Olw.NavDoc as NavDoc exposing (..)
+import Olw.DocumentV as DocumentV exposing (..)
 
 
 main =
