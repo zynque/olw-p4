@@ -18,8 +18,8 @@ type ExternalReference = ExternalReference { document: DocumentIdentifier, versi
 
 
 type DocumentData =
-  StringNode String |
-  IntNode Int |
+  StringData String |
+  IntData Int |
   ExternalReferenceNode ExternalReference |
   InternalReferenceNode InternalReference
 

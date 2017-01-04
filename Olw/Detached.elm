@@ -22,6 +22,6 @@ type DetachedNode tData = DetachedDataNode tData | DetachedInternalNode (List (D
 
 builderFunctions =
   let n children = DetachedInternalNode children
-      s val = DetachedDataNode (StringNode val)
-      i val = DetachedDataNode (IntNode val) 
+      s val = DetachedDataNode (StringData val)
+      i val = DetachedDataNode (IntData val) 
   in  (n, s, i)
