@@ -1,7 +1,7 @@
 import Array
 import Dict
 import Html exposing (Html, button, div, text, p)
-import Html.App as Html
+--import Html.App as Html
 import Html.Events exposing (onClick)
 import Olw.Document exposing (..)
 import Olw.Detached as Detached exposing (..)
@@ -61,6 +61,18 @@ rawDoc = DocumentVBuilder.buildRawDocument detachedDoc
 convertedDoc = DocumentVBuilder.buildDocument detachedDoc
 
 updatedDoc = DocumentVNav.updateNodeData 3 (IntData 42) convertedDoc
+offsetDoc = DocumentVNav.offsetDocBy 5 convertedDoc
+inserted = DocumentVNav.arrayInsertBefore 3 "R" (Array.fromList ["a", "b", "c", "d", "e"])
+
+doc2 =
+  let (n,s,i) = Detached.builderFunctions
+      d = n([i(1),n([i(3),i(4)]),i(2)])
+  in DocumentVBuilder.buildDocument d
+
+addedSubtree =
+  let (n,s,i) = Detached.builderFunctions
+      detached = n([i(5),i(6)])
+  in  DocumentVNav.insertNode detached 3 1 doc2
 
 view : Model -> Html Msg
 view model =
@@ -68,6 +80,13 @@ view model =
     [ p [] [ text ("detached doc example: " ++ toString detachedDoc) ],
       p [] [ text ("converted to raw: " ++ DocumentVBuilder.showRawDocument rawDoc) ],
       p [] [ text ("converted to docV: " ++ DocumentV.showDocument convertedDoc) ],
-      p [] [ text ("updated: " ++ DocumentV.showDocumentResult updatedDoc) ]
+      p [] [ text ("offset: " ++ DocumentV.showDocument offsetDoc) ],
+      p [] [ text ("updated: " ++ DocumentV.showDocumentResult updatedDoc) ],
+      p [] [ text ("ins b4 3: " ++ toString inserted) ],
+      p [] [],
+      --p [] [ text ("d2: " ++ DocumentV.showDocument doc2) ],
+      p [] [ text ("addedSubtree: " ++ DocumentV.showDocumentResult addedSubtree) ],
+
+      p [] []
     ]
  

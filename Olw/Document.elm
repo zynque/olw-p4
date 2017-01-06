@@ -29,7 +29,7 @@ type Document tData = Document {
   nodes: Array (DocumentNode tData)
 }
 
-
+-- todo: convert childIndices to a list until elm's array bugs can be fixed
 type DocumentNode tData = InternalNode {childIndices: Array Int} | DataNode tData
 
 

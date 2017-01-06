@@ -1,10 +1,11 @@
-module Olw.DocumentVNav exposing(updateNodeData)
+module Olw.DocumentVNav exposing(updateNodeData, offsetDocBy, arrayInsertBefore, insertNode)
 
 import Array exposing (Array)
 import String exposing (join)
 import Olw.Document as Document exposing (..)
 import Olw.Detached as Detached exposing (..)
 import Olw.DocumentV as DocumentV exposing (..)
+import Olw.DocumentVBuilder as DocumentVBuilder exposing (..)
 
 getVersionedNode : Int -> VersionedDocument tData -> Maybe (VersionedNode tData)
 getVersionedNode nodeId vDoc =
@@ -30,17 +31,103 @@ childrenOf nodeId doc =
       children = Maybe.map childrenOfNodeVersion maybeNode  
   in  Maybe.withDefault [] children
 
---insertNode : detachedNode tData -> Int (parent) -> Int (index) ->
---             VersionedDocument tData -> Result String (VersionedDocument tData)
+offsetNodeBy : Int -> VersionedNode tData -> VersionedNode tData
+offsetNodeBy offset node =
+  let (VersionedNode {parentId, versionId, documentNode}) = node
+      newDocNode = case documentNode of
+        InternalNode {childIndices} ->
+          InternalNode {childIndices = Array.map (\n -> n + offset) childIndices}
+        other -> other
+  in  VersionedNode {
+        parentId = Maybe.map (\n -> n + offset) parentId,
+        versionId = versionId,
+        documentNode = newDocNode
+      }
+
+offsetNodesBy : Int -> Array (VersionedNode tData) -> List (VersionedNode tData)
+offsetNodesBy offset nodes =
+  let nodesList = Array.toList nodes
+  in List.map (offsetNodeBy offset) nodesList
+
+offsetDocBy : Int -> VersionedDocument tData -> VersionedDocument tData
+offsetDocBy offset doc =
+  let (VersionedDocument {rootId, versionedNodes}) = doc
+      offsetVersionedNodes = Array.map (offsetNodeBy offset) versionedNodes
+  in  VersionedDocument {rootId = rootId + offset, versionedNodes = offsetVersionedNodes}
+
+insertNode : DetachedNode tData -> Int -> Int ->
+             VersionedDocument tData -> Result String (VersionedDocument tData)
+insertNode detachedNode parentId index doc =
+  let (VersionedDocument {rootId, versionedNodes}) = doc
+      docToMerge = DocumentVBuilder.buildDocument detachedNode
+      originalNodesLength = Array.length versionedNodes
+      docAfterOffset = offsetDocBy (originalNodesLength) docToMerge
+      (newNodeId, newNodes) =
+        let (VersionedDocument {rootId, versionedNodes}) = docAfterOffset
+        in (rootId, versionedNodes)
+      docWithAddedNodes = VersionedDocument {
+        rootId = rootId,
+        versionedNodes = Array.append versionedNodes newNodes
+      }
+      res = setNodesParent newNodeId parentId docWithAddedNodes
+  in  case res of
+        Ok doc -> addChildToParentInDoc parentId newNodeId index doc
+        err -> err
+
+addChildToParentInDoc : Int -> Int -> Int ->
+                        VersionedDocument tData -> Result String (VersionedDocument tData)
+addChildToParentInDoc parentId childId index doc =
+  let update docNode =
+    case docNode of
+    InternalNode {childIndices} -> InternalNode {
+      childIndices = arrayInsertBefore index childId childIndices
+    }
+    other -> other
+  in  transformNodeContent parentId update doc
+
+setNodesParent : Int -> Int ->
+                 VersionedDocument tData -> Result String (VersionedDocument tData)
+setNodesParent nodeId parentId doc =
+  transformNode nodeId (setParent parentId) doc
+
+setParent : Int -> VersionedNode tData -> VersionedNode tData
+setParent parentId newNode =
+  let (VersionedNode {parentId, versionId, documentNode}) = newNode
+  in  VersionedNode {parentId = parentId, versionId = versionId, documentNode = documentNode}   
+
+arrayInsertBefore : Int -> t -> Array t -> Array t
+arrayInsertBefore index item arr =
+  let left  = Array.slice 0 (index) arr
+      right = Array.slice index (Array.length arr) arr
+  in  Array.append (Array.push item left) right 
 
 updateNodeData : Int -> tData ->
              VersionedDocument tData -> Result String (VersionedDocument tData)
 updateNodeData nodeId newData oldDoc =
+  updateNodeContent nodeId (DataNode newData) oldDoc
+
+updateNodeContent : Int -> DocumentNode tData ->
+                    VersionedDocument tData -> Result String (VersionedDocument tData)
+updateNodeContent nodeId newData oldDoc =
+  transformNodeContent nodeId (\n -> newData) oldDoc
+
+transformNodeContent : Int -> (DocumentNode tData -> DocumentNode tData) ->
+                    VersionedDocument tData -> Result String (VersionedDocument tData)
+transformNodeContent nodeId updateContent oldDoc =
+  let updateVersionedNode (VersionedNode {parentId, versionId, documentNode}) =
+        VersionedNode {
+          parentId = parentId,
+          versionId = versionId + 1,
+          documentNode = updateContent(documentNode)
+        }
+  in transformNode nodeId updateVersionedNode oldDoc
+
+transformNode : Int -> (VersionedNode tData -> VersionedNode tData) ->
+                VersionedDocument tData -> Result String (VersionedDocument tData)
+transformNode nodeId update oldDoc =
   let (VersionedDocument {rootId, versionedNodes}) = oldDoc
-      updateVersionedNode (VersionedNode {parentId, versionId, documentNode}) =
-        VersionedNode {parentId = parentId, versionId = versionId + 1, documentNode = DataNode newData}
       maybeOldVersionedNode = Array.get nodeId versionedNodes
-      maybeNewVersionedNode = Maybe.map updateVersionedNode maybeOldVersionedNode
+      maybeNewVersionedNode = Maybe.map update maybeOldVersionedNode
   in case maybeNewVersionedNode of
       Just newVersionedNode ->       
         let newVersionedNodes = Array.set nodeId newVersionedNode versionedNodes
