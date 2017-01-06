@@ -61,8 +61,6 @@ rawDoc = DocumentVBuilder.buildRawDocument detachedDoc
 convertedDoc = DocumentVBuilder.buildDocument detachedDoc
 
 updatedDoc = DocumentVNav.updateNodeData 3 (IntData 42) convertedDoc
-offsetDoc = DocumentVNav.offsetDocBy 5 convertedDoc
-inserted = DocumentVNav.arrayInsertBefore 3 "R" (Array.fromList ["a", "b", "c", "d", "e"])
 
 doc2 =
   let (n,s,i) = Detached.builderFunctions
@@ -80,11 +78,9 @@ view model =
     [ p [] [ text ("detached doc example: " ++ toString detachedDoc) ],
       p [] [ text ("converted to raw: " ++ DocumentVBuilder.showRawDocument rawDoc) ],
       p [] [ text ("converted to docV: " ++ DocumentV.showDocument convertedDoc) ],
-      p [] [ text ("offset: " ++ DocumentV.showDocument offsetDoc) ],
-      p [] [ text ("updated: " ++ DocumentV.showDocumentResult updatedDoc) ],
-      p [] [ text ("ins b4 3: " ++ toString inserted) ],
+      p [] [ text ("data updated at node 3: " ++ DocumentV.showDocumentResult updatedDoc) ],
       p [] [],
-      --p [] [ text ("d2: " ++ DocumentV.showDocument doc2) ],
+      p [] [ text ("d2: " ++ DocumentV.showDocument doc2) ],
       p [] [ text ("addedSubtree: " ++ DocumentV.showDocumentResult addedSubtree) ],
 
       p [] []

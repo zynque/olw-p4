@@ -1,4 +1,4 @@
-module Olw.DocumentVNav exposing(updateNodeData, offsetDocBy, arrayInsertBefore, insertNode)
+module Olw.DocumentVNav exposing(updateNodeData, insertNode)
 
 import Array exposing (Array)
 import String exposing (join)
@@ -34,7 +34,7 @@ childrenOf nodeId doc =
 
 offsetNodeBy : Int -> VersionedNode tData -> VersionedNode tData
 offsetNodeBy offset node =
-  let (VersionedNode {parentId, versionId, documentNode}) = node
+  let (VersionedNode {parentId, index, versionId, documentNode}) = node
       newDocNode = case documentNode of
         InternalNode {childIndices} ->
           --InternalNode {childIndices = Array.map (\n -> n + offset) childIndices}
@@ -42,6 +42,7 @@ offsetNodeBy offset node =
         other -> other
   in  VersionedNode {
         parentId = Maybe.map (\n -> n + offset) parentId,
+        index = index,
         versionId = versionId,
         documentNode = newDocNode
       }
@@ -94,8 +95,8 @@ setNodesParent nodeId parentId doc =
 
 setParent : Int -> VersionedNode tData -> VersionedNode tData
 setParent parentId newNode =
-  let (VersionedNode {parentId, versionId, documentNode}) = newNode
-  in  VersionedNode {parentId = parentId, versionId = versionId, documentNode = documentNode}   
+  let (VersionedNode {parentId, index, versionId, documentNode}) = newNode
+  in  VersionedNode {parentId = parentId, index = index, versionId = versionId, documentNode = documentNode}   
 
 arrayInsertBefore : Int -> t -> Array t -> Array t
 arrayInsertBefore index item arr =
@@ -122,9 +123,10 @@ updateNodeContent nodeId newData oldDoc =
 transformNodeContent : Int -> (DocumentNode tData -> DocumentNode tData) ->
                     VersionedDocument tData -> Result String (VersionedDocument tData)
 transformNodeContent nodeId updateContent oldDoc =
-  let updateVersionedNode (VersionedNode {parentId, versionId, documentNode}) =
+  let updateVersionedNode (VersionedNode {parentId, index, versionId, documentNode}) =
         VersionedNode {
           parentId = parentId,
+          index = index,
           versionId = versionId + 1,
           documentNode = updateContent(documentNode)
         }
@@ -143,8 +145,18 @@ transformNode nodeId update oldDoc =
         in  Ok newDoc
       _ -> Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " does not exist in document")
 
+-- deleteNode
+-- removes a node with given id by updating its parent to no longer include
+-- it as a child
+-- the node remains in the documents node array until cleanup is performed
+--deleteNode : Int -> VersionedDocument tData -> Result String (VersionedDocument tData)
+--deleteNode nodeId -> doc =
+  -- find node
+  -- get node's parent id & relative index
+  -- update parent's children array by removing id at relative index
+
+
 --moveNode : Int -> Int -> Int ->
 --           VersionedDocument tData -> Result String (VersionedDocument tData)
 --moveNode nodeId newParentId newIndex oldDoc =
 
---deleteNode : Int -> VersionedDocument tData -> Result String (VersionedDocument tData)

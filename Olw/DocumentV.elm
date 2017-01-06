@@ -17,8 +17,9 @@ type VersionedDocument tData = VersionedDocument {
 }
 
 type VersionedNode tData = VersionedNode {
+  versionId: Int,
   parentId: Maybe Int,
-  versionId: Int, -- incremented for each new version of a node
+  index: Maybe Int, -- index of this node within parent's array of children
   documentNode: DocumentNode tData
 }
 

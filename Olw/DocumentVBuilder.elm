@@ -62,6 +62,7 @@ showRemainingRawDocNodes nodes nodeId =
 blankNode = VersionedNode {
         parentId = Nothing,
         versionId = 0,
+        index = Nothing,
 --        documentNode = InternalNode {childIndices = Array.fromList []}
         documentNode = InternalNode {childIndices = []}
       }
@@ -72,21 +73,23 @@ buildDocument detached =
       (RawDocument {rootId, nodes}) = rawDoc
       numNodes = Array.length nodes
       blankNodes = Array.repeat numNodes blankNode
-      versionedNodes = addNodesToDocument nodes Nothing rootId blankNodes
+      versionedNodes = addNodesToDocument nodes Nothing Nothing rootId blankNodes
   in  VersionedDocument {rootId = rootId, versionedNodes = versionedNodes}
 
-addNodesToDocument : Array (RawNode tData) -> Maybe Int -> Int ->
+addNodesToDocument : Array (RawNode tData) -> Maybe Int -> Maybe Int -> Int ->
                         Array (VersionedNode tData) -> Array (VersionedNode tData)
-addNodesToDocument rawNodes parentId nodeId nodes =
+addNodesToDocument rawNodes parentId index nodeId nodes =
   case (Array.get nodeId rawNodes) of
     Just (RawLeaf data) ->
-      let newNode = VersionedNode {parentId = parentId, versionId = 0, documentNode = DataNode data}
+      let newNode = VersionedNode {parentId = parentId, index = index, versionId = 0, documentNode = DataNode data}
       in Array.set nodeId newNode nodes
     Just (RawNode {childIds}) ->
-      let addChild id nds = addNodesToDocument rawNodes (Just nodeId) id nds
-          childNodes = List.foldl addChild nodes childIds
+      let addChild (index, id) nds = addNodesToDocument rawNodes (Just nodeId) index id nds
+          indexedChildIds = List.indexedMap (\i id -> (Just i, id)) childIds
+          childNodes = List.foldl addChild nodes indexedChildIds
           newNode = VersionedNode {
             parentId = parentId,
+            index = index,
             versionId = 0,
             documentNode = InternalNode {
 --              childIndices = Array.fromList childIds
