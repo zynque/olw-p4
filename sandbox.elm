@@ -1,11 +1,9 @@
 import Array
 import Dict
 import Html exposing (Html, button, div, text, p)
-import Html.App as Html
 import Html.Events exposing (onClick)
 import Olw.Document exposing (..)
 import Olw.NavDoc as NavDoc exposing (..)
-import Olw.DocumentV as DocumentV exposing (..)
 
 
 main =
@@ -55,11 +53,11 @@ update msg model =
 
 n0 = DataNode "a"
 n1 = DataNode "b"
-n2 = InternalNode { childIndices = Array.fromList [0, 1] }
+n2 = InternalNode { childIndices = [0, 1] }
 n3 = DataNode "c"
-n4 = InternalNode { childIndices = Array.fromList [2, 3] }
+n4 = InternalNode { childIndices = [2, 3] }
 n5 = DataNode "d"
-n6 = InternalNode { childIndices = Array.fromList [4, 5] }
+n6 = InternalNode { childIndices = [4, 5] }
 ns = Array.fromList [n0, n1, n2, n3, n4, n5, n6]
 d = Document { rootId = 6, nodes = ns }
 nd = NavDoc.fromDocument d

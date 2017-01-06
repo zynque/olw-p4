@@ -5,7 +5,8 @@ module Olw.Document exposing (
     DocumentData(..),
     Document(..),
     DocumentNode(..),
-    childrenOf, showDocument
+    childrenOf,
+    showDocument
   )
 
 import Array exposing (Array)
@@ -29,8 +30,8 @@ type Document tData = Document {
   nodes: Array (DocumentNode tData)
 }
 
--- todo: convert childIndices to a list until elm's array bugs can be fixed
-type DocumentNode tData = InternalNode {childIndices: Array Int} | DataNode tData
+-- todo: convert childIndices back to an array once elm's array bugs can be fixed
+type DocumentNode tData = InternalNode {childIndices: List Int} | DataNode tData
 
 
 childrenOf : Int -> Document tData -> List Int
@@ -38,7 +39,8 @@ childrenOf nodeId doc =
   let (Document {rootId, nodes}) = doc
       node = Array.get nodeId nodes
       childIds = case node of
-        Just (InternalNode {childIndices}) -> Array.toList childIndices
+        --Just (InternalNode {childIndices}) -> Array.toList childIndices
+        Just (InternalNode {childIndices}) -> childIndices
         _ -> []
   in childIds
 
@@ -53,5 +55,6 @@ showDocument (Document {rootId, nodes}) =
 
 showDocumentNode : DocumentNode String -> String
 showDocumentNode node = case node of
-  (InternalNode {childIndices}) -> "(" ++ join "," (Array.toList (Array.map toString childIndices)) ++ ")"
+--  (InternalNode {childIndices}) -> "(" ++ join "," (Array.toList (Array.map toString childIndices)) ++ ")"
+  (InternalNode {childIndices}) -> "(" ++ join "," (List.map toString childIndices) ++ ")"
   (DataNode data) -> "\"" ++ data ++ "\""

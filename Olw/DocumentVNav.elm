@@ -24,7 +24,8 @@ childrenOf : Int -> VersionedDocument tData -> List Int
 childrenOf nodeId doc =
   let maybeNode = doc |> getVersionedNode nodeId
       childrenOfDocumentNode docNode = case docNode of
-        InternalNode {childIndices} -> Array.toList childIndices
+--        InternalNode {childIndices} -> Array.toList childIndices
+        InternalNode {childIndices} -> childIndices
         _ -> []
       childrenOfNodeVersion (VersionedNode {parentId, versionId, documentNode}) =
         childrenOfDocumentNode documentNode
@@ -36,7 +37,8 @@ offsetNodeBy offset node =
   let (VersionedNode {parentId, versionId, documentNode}) = node
       newDocNode = case documentNode of
         InternalNode {childIndices} ->
-          InternalNode {childIndices = Array.map (\n -> n + offset) childIndices}
+          --InternalNode {childIndices = Array.map (\n -> n + offset) childIndices}
+          InternalNode {childIndices = List.map (\n -> n + offset) childIndices}
         other -> other
   in  VersionedNode {
         parentId = Maybe.map (\n -> n + offset) parentId,
@@ -80,7 +82,7 @@ addChildToParentInDoc parentId childId index doc =
   let update docNode =
     case docNode of
     InternalNode {childIndices} -> InternalNode {
-      childIndices = arrayInsertBefore index childId childIndices
+      childIndices = listInsertBefore index childId childIndices
     }
     other -> other
   in  transformNodeContent parentId update doc
@@ -100,6 +102,12 @@ arrayInsertBefore index item arr =
   let left  = Array.slice 0 (index) arr
       right = Array.slice index (Array.length arr) arr
   in  Array.append (Array.push item left) right 
+
+listInsertBefore : Int -> t -> List t -> List t
+listInsertBefore index item lst =
+  let left  = List.take (index) lst
+      right = List.drop (index) lst
+  in  List.append left (item :: right) 
 
 updateNodeData : Int -> tData ->
              VersionedDocument tData -> Result String (VersionedDocument tData)

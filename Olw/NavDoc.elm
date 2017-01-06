@@ -40,15 +40,15 @@ childrenOf nodeId (NavDoc { doc, parents }) =
 -- (head of list is that node's id, end of list is doc root)
 pathToRoot : Int -> NavDoc tData -> List Int
 pathToRoot nodeId navDoc =
-  nodeId :: pathToRoot' nodeId navDoc []
+  nodeId :: updPathToRoot nodeId navDoc []
 
 
-pathToRoot' : Int -> NavDoc tData -> List Int -> List Int
-pathToRoot' nodeId navDoc path =
+updPathToRoot : Int -> NavDoc tData -> List Int -> List Int
+updPathToRoot nodeId navDoc path =
   let parentIdOpt = parentOf nodeId navDoc
   in case parentIdOpt of
     Just parentId ->
-      let p = pathToRoot' parentId navDoc path
+      let p = updPathToRoot parentId navDoc path
       in parentId :: p
     _ -> path
 
@@ -169,7 +169,8 @@ insertNodeUnderParent parentId replacedNodeId relativeIndex newNodeId newNode no
   let parentNode = Array.get parentId nodes
       newNavDoc = case parentNode of
         Just (InternalNode { childIndices }) ->
-          let newChildIds = Array.set relativeIndex newNodeId childIndices
+          let newChildIds = listSetAt relativeIndex newNodeId childIndices
+              --newChildIds = Array.set relativeIndex newNodeId childIndices
               newParentNode = InternalNode { childIndices = newChildIds }
               newParentId = Array.length nodes
               nodesWithNewParent = Array.push newParentNode nodes
@@ -178,3 +179,8 @@ insertNodeUnderParent parentId replacedNodeId relativeIndex newNodeId newNode no
         _ -> Err ("insertNodeUnderParent expected parent to be InternalNode with id: " ++ toString parentId)
   in newNavDoc
 
+listSetAt : Int -> t -> List t -> List t
+listSetAt index item lst =
+  let left  = List.take (index) lst
+      right = List.drop (index + 1) lst
+  in  List.append left (item :: right) 

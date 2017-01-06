@@ -62,7 +62,8 @@ showRemainingRawDocNodes nodes nodeId =
 blankNode = VersionedNode {
         parentId = Nothing,
         versionId = 0,
-        documentNode = InternalNode {childIndices = Array.fromList []}
+--        documentNode = InternalNode {childIndices = Array.fromList []}
+        documentNode = InternalNode {childIndices = []}
       }
 
 buildDocument : DetachedNode tData -> VersionedDocument tData
@@ -88,8 +89,9 @@ addNodesToDocument rawNodes parentId nodeId nodes =
             parentId = parentId,
             versionId = 0,
             documentNode = InternalNode {
-              childIndices = Array.fromList childIds
-            }
+--              childIndices = Array.fromList childIds
+               childIndices = childIds
+           }
           }
       in  Array.set nodeId newNode childNodes
     _ -> nodes -- TODO: Report this branch as error

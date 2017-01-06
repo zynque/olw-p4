@@ -39,7 +39,8 @@ showDocumentNode : VersionedNode DocumentData -> String
 showDocumentNode node =
   let (VersionedNode {versionId, documentNode}) = node
       content = case documentNode of
-        (InternalNode {childIndices}) -> "(" ++ join "," (Array.toList (Array.map toString childIndices)) ++ ")"
+--        (InternalNode {childIndices}) -> "(" ++ join "," (Array.toList (Array.map toString childIndices)) ++ ")"
+        (InternalNode {childIndices}) -> "(" ++ join "," (List.map toString childIndices) ++ ")"
         (DataNode data) -> (showDocumentData data)
   in  (toString versionId) ++ ":" ++ content
 
