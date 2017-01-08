@@ -1,4 +1,4 @@
-module Olw.DocumentVNav exposing(updateNodeData, insertNode)
+module Olw.DocumentVNav exposing(updateNodeData, insertNode, deleteNode, listRemoveAt)
 
 import Array exposing (Array)
 import String exposing (join)
@@ -67,12 +67,12 @@ insertNode detachedNode parentId index doc =
       docAfterOffset = offsetDocBy (originalNodesLength) docToMerge
       (newNodeId, newNodes) =
         let (VersionedDocument {rootId, versionedNodes}) = docAfterOffset
-        in (rootId, versionedNodes)
+        in  (rootId, versionedNodes)
       docWithAddedNodes = VersionedDocument {
         rootId = rootId,
         versionedNodes = Array.append versionedNodes newNodes
       }
-      res = setNodesParent newNodeId parentId docWithAddedNodes
+      res = setNodesParent newNodeId parentId index docWithAddedNodes
   in  case res of
         Ok doc -> addChildToParentInDoc parentId newNodeId index doc
         err -> err
@@ -88,15 +88,20 @@ addChildToParentInDoc parentId childId index doc =
     other -> other
   in  transformNodeContent parentId update doc
 
-setNodesParent : Int -> Int ->
+setNodesParent : Int -> Int -> Int ->
                  VersionedDocument tData -> Result String (VersionedDocument tData)
-setNodesParent nodeId parentId doc =
-  transformNode nodeId (setParent parentId) doc
+setNodesParent nodeId parentId index doc =
+  transformNode nodeId (setParent parentId index) doc
 
-setParent : Int -> VersionedNode tData -> VersionedNode tData
-setParent parentId newNode =
+setParent : Int -> Int -> VersionedNode tData -> VersionedNode tData
+setParent newParentId newIndex newNode =
   let (VersionedNode {parentId, index, versionId, documentNode}) = newNode
-  in  VersionedNode {parentId = parentId, index = index, versionId = versionId, documentNode = documentNode}   
+  in  VersionedNode {
+    parentId = Just newParentId,
+    index = Just newIndex,
+    versionId = versionId,
+    documentNode = documentNode
+  }
 
 arrayInsertBefore : Int -> t -> Array t -> Array t
 arrayInsertBefore index item arr =
@@ -108,7 +113,13 @@ listInsertBefore : Int -> t -> List t -> List t
 listInsertBefore index item lst =
   let left  = List.take (index) lst
       right = List.drop (index) lst
-  in  List.append left (item :: right) 
+  in  List.append left (item :: right)
+
+listRemoveAt : Int -> List t -> List t
+listRemoveAt index lst =
+  let left = List.take (index) lst
+      right = List.drop (index + 1) lst
+  in List.append left right
 
 updateNodeData : Int -> tData ->
              VersionedDocument tData -> Result String (VersionedDocument tData)
@@ -149,14 +160,26 @@ transformNode nodeId update oldDoc =
 -- removes a node with given id by updating its parent to no longer include
 -- it as a child
 -- the node remains in the documents node array until cleanup is performed
---deleteNode : Int -> VersionedDocument tData -> Result String (VersionedDocument tData)
---deleteNode nodeId -> doc =
-  -- find node
-  -- get node's parent id & relative index
-  -- update parent's children array by removing id at relative index
+deleteNode : Int -> VersionedDocument tData -> Result String (VersionedDocument tData)
+deleteNode nodeId doc =
+  let nd = getVersionedNode nodeId doc
+  in  case nd of
+        Just (VersionedNode {parentId, index}) ->
+          case (parentId, index) of
+            (Just pId, Just i) ->
+              let updateParentContent parentData =
+                case parentData of
+                  InternalNode {childIndices} ->
+                    InternalNode {childIndices = listRemoveAt i childIndices}
+                  other -> other
+              in transformNodeContent pId updateParentContent doc
+            _ -> Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " has no parent or is missing an index")
+        _ ->
+          Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " does not exist in document")
 
 
 --moveNode : Int -> Int -> Int ->
 --           VersionedDocument tData -> Result String (VersionedDocument tData)
 --moveNode nodeId newParentId newIndex oldDoc =
 
+-- !! children's index needs to be shifted when a sibling is added or removed left of them

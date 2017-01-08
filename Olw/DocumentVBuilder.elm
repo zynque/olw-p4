@@ -78,18 +78,18 @@ buildDocument detached =
 
 addNodesToDocument : Array (RawNode tData) -> Maybe Int -> Maybe Int -> Int ->
                         Array (VersionedNode tData) -> Array (VersionedNode tData)
-addNodesToDocument rawNodes parentId index nodeId nodes =
+addNodesToDocument rawNodes maybeParentId maybeNodeIndex nodeId nodes =
   case (Array.get nodeId rawNodes) of
     Just (RawLeaf data) ->
-      let newNode = VersionedNode {parentId = parentId, index = index, versionId = 0, documentNode = DataNode data}
+      let newNode = VersionedNode {parentId = maybeParentId, index = maybeNodeIndex, versionId = 0, documentNode = DataNode data}
       in Array.set nodeId newNode nodes
     Just (RawNode {childIds}) ->
-      let addChild (index, id) nds = addNodesToDocument rawNodes (Just nodeId) index id nds
-          indexedChildIds = List.indexedMap (\i id -> (Just i, id)) childIds
+      let addChild (index, id) nds = addNodesToDocument rawNodes (Just nodeId) (Just index) id nds
+          indexedChildIds = List.indexedMap (,) childIds
           childNodes = List.foldl addChild nodes indexedChildIds
           newNode = VersionedNode {
-            parentId = parentId,
-            index = index,
+            parentId = maybeParentId,
+            index = maybeNodeIndex,
             versionId = 0,
             documentNode = InternalNode {
 --              childIndices = Array.fromList childIds

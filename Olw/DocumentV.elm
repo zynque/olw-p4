@@ -23,27 +23,27 @@ type VersionedNode tData = VersionedNode {
   documentNode: DocumentNode tData
 }
 
-showDocumentResult : Result String (VersionedDocument DocumentData) -> String
+showDocumentResult : Result String (VersionedDocument DocumentData) -> List String
 showDocumentResult docResult = case docResult of
   Ok doc -> showDocument doc
-  Err err -> err
+  Err err -> [err]
 
-showDocument : VersionedDocument DocumentData -> String
+showDocument : VersionedDocument DocumentData -> List String
 showDocument (VersionedDocument {rootId, versionedNodes}) =
   let indexedChildren = Array.toIndexedList versionedNodes
-      displayChild (i, c) = (toString i) ++ ":" ++ (showDocumentNode c)
+      displayChild (i, c) = "n:" ++ (toString i) ++ " " ++ (showDocumentNode c)
       displayedChildren = List.map displayChild indexedChildren
-  in "root:" ++ (toString rootId) ++ " | " ++ (join " | " displayedChildren)
+  in ("root:" ++ (toString rootId)) :: displayedChildren
 
 
 showDocumentNode : VersionedNode DocumentData -> String
 showDocumentNode node =
-  let (VersionedNode {versionId, documentNode}) = node
+  let (VersionedNode {parentId, index, versionId, documentNode}) = node
       content = case documentNode of
 --        (InternalNode {childIndices}) -> "(" ++ join "," (Array.toList (Array.map toString childIndices)) ++ ")"
         (InternalNode {childIndices}) -> "(" ++ join "," (List.map toString childIndices) ++ ")"
         (DataNode data) -> (showDocumentData data)
-  in  (toString versionId) ++ ":" ++ content
+  in  "v: " ++ (toString versionId) ++ " p:" ++ (toString parentId) ++ " i:" ++ (toString index) ++ " - " ++ content
 
 showDocumentData : DocumentData -> String
 showDocumentData data =
