@@ -7,6 +7,7 @@ import Olw.Detached as Detached exposing (..)
 import Olw.DocumentV as DocumentV exposing (..)
 import Olw.DocumentVBuilder as DocumentVBuilder exposing (..)
 
+
 getVersionedNode : Int -> VersionedDocument tData -> Maybe (VersionedNode tData)
 getVersionedNode nodeId vDoc =
   let (VersionedDocument {rootId, versionedNodes}) = vDoc
@@ -120,6 +121,12 @@ listRemoveAt index lst =
   let left = List.take (index) lst
       right = List.drop (index + 1) lst
   in List.append left right
+
+listSetAt : Int -> t -> List t -> List t
+listSetAt index item lst =
+  let left  = List.take (index) lst
+      right = List.drop (index + 1) lst
+  in  List.append left (item :: right) 
 
 updateNodeData : Int -> tData ->
              VersionedDocument tData -> Result String (VersionedDocument tData)
