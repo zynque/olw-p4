@@ -1,7 +1,9 @@
 module Olw.Document.Document exposing (
     Document(..),
     VersionedNode(..),
-    Node(..)
+    Node(..),
+    getNode,
+    childrenOf
   )
 
 import Array exposing (Array)
@@ -19,3 +21,20 @@ type VersionedNode tData = VersionedNode {
 }
 
 type Node tData = Node {childIds: List Int} | Leaf tData
+
+getNode : Int -> Document tData -> Maybe (VersionedNode tData)
+getNode nodeId vDoc =
+  let (Document {rootId, versionedNodes}) = vDoc
+  in  Array.get nodeId versionedNodes
+
+childrenOf : Int -> Document tData -> List Int
+childrenOf nodeId doc =
+  let maybeNode = doc |> getNode nodeId
+      childrenOfNode docNode = case docNode of
+--        Node {childIds} -> Array.toList childIndices
+        Node {childIds} -> childIds
+        _ -> []
+      childrenOfVersionedNode (VersionedNode {version, node}) =
+        childrenOfNode node
+      children = Maybe.map childrenOfVersionedNode maybeNode  
+  in  Maybe.withDefault [] children

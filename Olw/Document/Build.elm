@@ -1,5 +1,6 @@
 module Olw.Document.Build exposing (
-    buildDocument
+    buildDocument,
+    buildWorkingDocument
   )
 
 import Array exposing (Array)
@@ -7,6 +8,7 @@ import String exposing (join)
 import Olw.Document.Data exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Document exposing (..)
+import Olw.Document.WorkingDocument exposing (..)
 
 emptyDocument = Document {rootId = 0, versionedNodes = Array.fromList []}
 
@@ -20,8 +22,8 @@ buildDocument detached =
 -- the rootId is the assigned id of the detached node
 
 addDetachedNode : DetachedNode tData -> Document tData -> Document tData
-addDetachedNode detachedNode rawDoc =
-  let (Document {rootId, versionedNodes}) = rawDoc
+addDetachedNode detachedNode document =
+  let (Document {rootId, versionedNodes}) = document
   in case detachedNode of
     DetachedLeaf data ->
       let rootId = Array.length versionedNodes
@@ -33,7 +35,7 @@ addDetachedNode detachedNode rawDoc =
             let newDoc = addDetachedNode detached doc
                 (Document {rootId, versionedNodes}) = newDoc
             in (rootId :: ids, newDoc)
-          (childIdsRev, docWithChildren) = List.foldl addChild ([], rawDoc) children
+          (childIdsRev, docWithChildren) = List.foldl addChild ([], document) children
           (Document {rootId, versionedNodes}) = docWithChildren
           newRootId = Array.length versionedNodes
           childIds = List.reverse childIdsRev
@@ -41,43 +43,16 @@ addDetachedNode detachedNode rawDoc =
           newNodes = Array.push newNode versionedNodes
       in  Document {rootId = newRootId, versionedNodes = newNodes}
 
+buildWorkingDocument : Document tData -> WorkingDocument tData
+buildWorkingDocument document =
+  let (Document {rootId, versionedNodes}) = document
+      emptyParentIds = Array.repeat (Array.length versionedNodes) Nothing
+      parentIds = setParentNodeIds Nothing rootId document emptyParentIds
+  in  WorkingDocument {document = document, parentIds = parentIds}
 
---blankNode = VersionedNode {
---        parentId = Nothing,
---        versionId = 0,
---        index = Nothing,
-----        documentNode = InternalNode {childIndices = Array.fromList []}
---        documentNode = InternalNode {childIndices = []}
---      }
-
---buildDocument : DetachedNode tData -> VersionedDocument tData
---buildDocument detached =
---  let rawDoc = buildDocument detached
---      (Document {rootId, nodes}) = rawDoc
---      numNodes = Array.length nodes
---      blankNodes = Array.repeat numNodes blankNode
---      versionedNodes = addNodesToDocument nodes Nothing Nothing rootId blankNodes
---  in  VersionedDocument {rootId = rootId, versionedNodes = versionedNodes}
-
---addNodesToDocument : Array (RawNode tData) -> Maybe Int -> Maybe Int -> Int ->
---                        Array (VersionedNode tData) -> Array (VersionedNode tData)
---addNodesToDocument rawNodes maybeParentId maybeNodeIndex nodeId nodes =
---  case (Array.get nodeId rawNodes) of
---    Just (RawLeaf data) ->
---      let newNode = VersionedNode {parentId = maybeParentId, index = maybeNodeIndex, versionId = 0, documentNode = DataNode data}
---      in Array.set nodeId newNode nodes
---    Just (RawNode {childIds}) ->
---      let addChild (index, id) nds = addNodesToDocument rawNodes (Just nodeId) (Just index) id nds
---          indexedChildIds = List.indexedMap (,) childIds
---          childNodes = List.foldl addChild nodes indexedChildIds
---          newNode = VersionedNode {
---            parentId = maybeParentId,
---            index = maybeNodeIndex,
---            versionId = 0,
---            documentNode = InternalNode {
-----              childIndices = Array.fromList childIds
---               childIndices = childIds
---           }
---          }
---      in  Array.set nodeId newNode childNodes
---    _ -> nodes -- TODO: Report this branch as error
+setParentNodeIds : Maybe Int -> Int -> Document tData -> Array (Maybe Int) -> Array (Maybe Int)
+setParentNodeIds parentId nodeId document parentIds =
+  let updatedParents = Array.set nodeId parentId parentIds 
+      childIds = document |> childrenOf nodeId
+      setChildsParent childId parentIds = setParentNodeIds (Just nodeId) childId document parentIds
+  in  List.foldl setChildsParent updatedParents childIds

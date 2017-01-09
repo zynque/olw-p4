@@ -50,6 +50,7 @@ detachedDoc = let (n,s,i) = Detached.builderFunctions
               in  n[s "a", i 3, n[s "b", i 2]]
 
 doc = Build.buildDocument detachedDoc
+workingDoc = Build.buildWorkingDocument doc
 
 showLines lines =
   let pars = List.map (\l -> p [] [ text l ]) lines
@@ -66,6 +67,7 @@ view model =
       p [] [ text (toString (Reference (Internal (InternalNodeReference 3)))) ],
       p [] [ text (toString detachedDoc) ],
       p [] [ text (toString doc) ],
+      p [] [ text (toString workingDoc) ],
       showDoc doc
     ]
  

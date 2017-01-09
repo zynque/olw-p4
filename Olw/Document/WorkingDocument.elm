@@ -1,6 +1,6 @@
 module Olw.Document.WorkingDocument exposing(
-  WorkingDocument(..),
-)
+    WorkingDocument(..)
+  )
 
 import Array exposing (Array)
 import String exposing (join)
