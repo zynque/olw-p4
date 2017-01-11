@@ -2,7 +2,8 @@ module Olw.Document.ElmCoreExt exposing (
     arrayInsertBefore,
     listInsertBefore,
     listRemoveAt,
-    listSetAt
+    listSetAt,
+    maybeFlatten
   )
 
 import Array exposing (Array)
@@ -30,3 +31,8 @@ listSetAt index item lst =
   let left  = List.take (index) lst
       right = List.drop (index + 1) lst
   in  List.append left (item :: right) 
+
+maybeFlatten : Maybe (Maybe t) -> Maybe t
+maybeFlatten m = case m of
+  Just (v) -> v
+  Nothing -> Nothing

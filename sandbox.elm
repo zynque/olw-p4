@@ -71,7 +71,9 @@ workingDoc = Build.buildWorkingDocument doc
 doc2 = Edit.updateNodeData 3 (IntData 42) workingDoc
 
 wd2 = Build.buildWorkingDocument (Build.buildDocument detachedDoc)
-wd2u = Edit.insertNode attachment 4 1 wd2
+wd2u = wd2
+         |> Edit.insertNode attachment 4 1
+         |> Result.andThen (Edit.deleteNode 1)
 
 -- view
 

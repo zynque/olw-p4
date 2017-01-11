@@ -123,30 +123,34 @@ transformNode nodeId update workingDocument =
         in  Ok newWorkingDoc
       _ -> Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " does not exist in document")
 
----- deleteNode
----- removes a node with given id by updating its parent to no longer include
----- it as a child
----- the node remains in the documents node array until cleanup is performed
---deleteNode : Int -> VersionedDocument tData -> Result String (VersionedDocument tData)
---deleteNode nodeId doc =
---  let nd = getVersionedNode nodeId doc
---  in  case nd of
---        Just (VersionedNode {parentId, index}) ->
---          case (parentId, index) of
---            (Just pId, Just i) ->
---              let updateParentContent parentData =
---                case parentData of
---                  InternalNode {childIndices} ->
---                    InternalNode {childIndices = listRemoveAt i childIndices}
---                  other -> other
---              in transformNodeContent pId updateParentContent doc
---            _ -> Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " has no parent or is missing an index")
---        _ ->
---          Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " does not exist in document")
+-- deleteNode
+-- removes a node with given id by updating its parent to no longer include
+-- it as a child
+-- the node remains in the documents node array until cleanup is performed
+deleteNode : Int -> WorkingDocument tData -> Result String (WorkingDocument tData)
+deleteNode nodeId workingDocument =
+  let (WorkingDocument {document, parentIds}) = workingDocument
+      maybeParentId = maybeFlatten (Array.get nodeId parentIds)
+      updateParentContent parentData =
+        case parentData of
+          Node {childIds} ->
+            Node {childIds = List.filter (\i -> i /= nodeId) childIds}
+          other -> other
+  in  case maybeParentId of
+        Just parentId ->
+          transformNodeContent parentId updateParentContent workingDocument
+        Nothing -> Err ("Edit.deleteNode: could not lookup parent of node with id: " ++ (toString nodeId))
+  --transformNodeContent parentId
+  --in  case nd of
+  --      Just (VersionedNode {parentId, index}) ->
+  --        case (parentId, index) of
+  --          (Just pId, Just i) ->
+  --            in transformNodeContent pId updateParentContent doc
+  --          _ -> Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " has no parent or is missing an index")
+  --      _ ->
+  --        Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " does not exist in document")
 
 
 ----moveNode : Int -> Int -> Int ->
 ----           VersionedDocument tData -> Result String (VersionedDocument tData)
 ----moveNode nodeId newParentId newIndex oldDoc =
-
----- !! children's index needs to be shifted when a sibling is added or removed left of them
