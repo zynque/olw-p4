@@ -4,7 +4,7 @@ module Olw.Document.WorkingDocument exposing(
 
 import Array exposing (Array)
 import String exposing (join)
-import Olw.Document.Document exposing (..)
+import Olw.Document.Document as Document exposing (..)
 
 -- additional document information, such as parent id of each node, allows for efficient navigation
 -- and updates to a document
@@ -18,3 +18,21 @@ type WorkingDocument tData = WorkingDocument {
   -- indexed by node id, gives the 0-based index of that node within its parent's list of children
   -- positions: Array (Maybe Int)
 }
+
+getVersionedNode : Int -> WorkingDocument tData -> Maybe (VersionedNode tData)
+getVersionedNode nodeId wdoc =
+  let (WorkingDocument {document}) = wdoc
+      (Document {rootId, versionedNodes}) = document
+  in  Array.get nodeId versionedNodes
+
+parentOf : Int -> WorkingDocument tData -> Maybe (Int)
+parentOf nodeId wdoc =
+  let (WorkingDocument {parentIds}) = wdoc
+  in  case Array.get nodeId parentIds of
+      Just maybeId -> maybeId
+      Nothing -> Nothing
+
+childrenOf : Int -> WorkingDocument tData -> List Int
+childrenOf nodeId wdoc =
+  let (WorkingDocument {document, parentIds}) = wdoc
+  in  Document.childrenOf nodeId document

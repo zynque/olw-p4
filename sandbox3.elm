@@ -6,6 +6,7 @@ import Olw.Document.Data exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Build as Build exposing (..)
 import Olw.Document.Show as Show exposing (..)
+import Olw.Document.Edit as Edit exposing (..)
 
 -- sandbox.elm & sandbox2.elm to be deprecated and replaced by this one
 -- big re-organization and clean-up in progress
@@ -46,28 +47,43 @@ update msg model = model
 
 -- VIEW
 
-detachedDoc = let (n,s,i) = Detached.builderFunctions
-              in  n[s "a", i 3, n[s "b", i 2]]
-
-doc = Build.buildDocument detachedDoc
-workingDoc = Build.buildWorkingDocument doc
-
 showLines lines =
   let pars = List.map (\l -> p [] [ text l ]) lines
   in  div [] pars
 
 showDoc d = showLines (Show.showDocument d)
-showDocR d = showLines (Show.showDocumentResult d)
+showWDoc d = showLines (Show.showWorkingDocument d)
+showDocR d = showLines (Show.showResult Show.showDocument d)
+showWDocR d = showLines (Show.showResult Show.showWorkingDocument d)
 
+
+-- samples
+
+detachedDoc = let (n,s,i) = Detached.builderFunctions
+              in  n[s "a", i 3, n[s "b", i 2]]
+
+attachment = let (n,s,i) = Detached.builderFunctions
+             in  n[i 8, i 9]
+
+doc = Build.buildDocument detachedDoc
+workingDoc = Build.buildWorkingDocument doc
+
+doc2 = Edit.updateNodeData 3 (IntData 42) workingDoc
+
+wd2 = Build.buildWorkingDocument (Build.buildDocument detachedDoc)
+wd2u = Edit.insertNode attachment 4 1 wd2
+
+-- view
 
 view : Model -> Html Msg
 view model =
   div []
-    [ p [] [ text ("xyz: " ++ "123") ],
-      p [] [ text (toString (Reference (Internal (InternalNodeReference 3)))) ],
-      p [] [ text (toString detachedDoc) ],
-      p [] [ text (toString doc) ],
-      p [] [ text (toString workingDoc) ],
-      showDoc doc
+    [ showDoc doc,
+      p [] [ text "." ],
+      showWDoc workingDoc,
+      p [] [ text "." ],
+      showWDocR doc2,
+      p [] [ text "." ],
+      showWDocR wd2u
     ]
  

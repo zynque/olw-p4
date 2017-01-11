@@ -1,19 +1,27 @@
 module Olw.Document.Show exposing (
-    showDocumentResult,
-    showDocument
+    showWorkingDocument,
+    showDocument,
+    showResult
   )
 
 import Array exposing (Array)
 import String exposing (join)
 import Olw.Document.Data exposing (..)
 import Olw.Document.Document exposing (..)
+import Olw.Document.WorkingDocument exposing (..)
 
---showResult : Result String 
+showResult : (t -> List String) -> Result String t -> List String
+showResult show res =
+  case res of
+    Ok x -> show x
+    Err err -> [err]
 
-showDocumentResult : Result String (Document DocumentData) -> List String
-showDocumentResult docResult = case docResult of
-  Ok doc -> showDocument doc
-  Err err -> [err]
+showWorkingDocument : WorkingDocument DocumentData -> List String
+showWorkingDocument wdoc =
+  let (WorkingDocument {document, parentIds}) = wdoc
+      shownDoc = showDocument document
+      shownParentIds = "parents:" ++ (toString (Array.toIndexedList parentIds))
+  in  "Working Document" :: shownParentIds :: shownDoc
 
 showDocument : Document DocumentData -> List String
 showDocument (Document {rootId, versionedNodes}) =
