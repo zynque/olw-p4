@@ -8,9 +8,6 @@ import Olw.Document.Build as Build exposing (..)
 import Olw.Document.Show as Show exposing (..)
 import Olw.Document.Edit as Edit exposing (..)
 
--- sandbox.elm & sandbox2.elm to be deprecated and replaced by this one
--- big re-organization and clean-up in progress
-
 main =
   Html.beginnerProgram
     { model = model
@@ -18,32 +15,22 @@ main =
     , update = update
     }
 
-
-
 -- MODEL
-
 
 type alias Model = Int
 
-
 model : Model
-model =
-  0
-
-
+model = 0
 
 -- UPDATE
-
 
 type Msg
   = Increment
   | Decrement
   | AddNode
 
-
 update : Msg -> Model -> Model
 update msg model = model
-
 
 -- VIEW
 
@@ -51,11 +38,10 @@ showLines lines =
   let pars = List.map (\l -> p [] [ text l ]) lines
   in  div [] pars
 
-showDoc d = showLines (Show.showDocument d)
-showWDoc d = showLines (Show.showWorkingDocument d)
-showDocR d = showLines (Show.showResult Show.showDocument d)
-showWDocR d = showLines (Show.showResult Show.showWorkingDocument d)
-
+showDoc d = showLines ("Document" :: (Show.showDocument d))
+showWDoc d = showLines ("Document" :: (Show.showWorkingDocument d))
+showDocR d = showLines ("Working Document" :: (Show.showResult Show.showDocument d))
+showWDocR d = showLines ("Working Document" :: (Show.showResult Show.showWorkingDocument d))
 
 -- samples
 
@@ -75,7 +61,9 @@ wd2u = wd2
          |> Edit.insertNode attachment 4 1
          |> Result.andThen (Edit.deleteNode 1)
 
--- view
+wd3 = Build.buildWorkingDocument (Build.buildDocument detachedDoc)
+wd3u = wd3
+         |> Edit.moveNode 0 4 1
 
 view : Model -> Html Msg
 view model =

@@ -21,7 +21,7 @@ showWorkingDocument wdoc =
   let (WorkingDocument {document, parentIds}) = wdoc
       shownDoc = showDocument document
       shownParentIds = "parents:" ++ (toString (Array.toIndexedList parentIds))
-  in  "Working Document" :: shownParentIds :: shownDoc
+  in  shownParentIds :: shownDoc
 
 showDocument : Document DocumentData -> List String
 showDocument (Document {rootId, versionedNodes}) =

@@ -1,5 +1,8 @@
 module Olw.Document.Edit exposing (
-    ..
+    insertNode,
+    updateNodeData,
+    deleteNode,
+    moveNode
   )
 
 import Array exposing (Array)
@@ -91,11 +94,11 @@ setNodesParent nodeId newParentId workingDocument =
 updateNodeData : Int -> tData ->
              WorkingDocument tData -> Result String (WorkingDocument tData)
 updateNodeData nodeId newData oldDoc =
-  updateNodeContent nodeId (Leaf newData) oldDoc
+  updateNode nodeId (Leaf newData) oldDoc
 
-updateNodeContent : Int -> Node tData ->
+updateNode : Int -> Node tData ->
                     WorkingDocument tData -> Result String (WorkingDocument tData)
-updateNodeContent nodeId newData oldDoc =
+updateNode nodeId newData oldDoc =
   transformNodeContent nodeId (\n -> newData) oldDoc
 
 transformNodeContent : Int -> (Node tData -> Node tData) ->
@@ -140,17 +143,8 @@ deleteNode nodeId workingDocument =
         Just parentId ->
           transformNodeContent parentId updateParentContent workingDocument
         Nothing -> Err ("Edit.deleteNode: could not lookup parent of node with id: " ++ (toString nodeId))
-  --transformNodeContent parentId
-  --in  case nd of
-  --      Just (VersionedNode {parentId, index}) ->
-  --        case (parentId, index) of
-  --          (Just pId, Just i) ->
-  --            in transformNodeContent pId updateParentContent doc
-  --          _ -> Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " has no parent or is missing an index")
-  --      _ ->
-  --        Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " does not exist in document")
 
-
-----moveNode : Int -> Int -> Int ->
-----           VersionedDocument tData -> Result String (VersionedDocument tData)
-----moveNode nodeId newParentId newIndex oldDoc =
+moveNode : Int -> Int -> Int ->
+           WorkingDocument tData -> Result String (WorkingDocument tData)
+moveNode nodeId newParentId newIndex oldDoc =
+  Ok oldDoc
