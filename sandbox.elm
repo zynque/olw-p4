@@ -7,6 +7,7 @@ import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Build as Build exposing (..)
 import Olw.Document.Show as Show exposing (..)
 import Olw.Document.Edit as Edit exposing (..)
+import Olw.Document.ElmCoreExt exposing (..)
 
 main =
   Html.beginnerProgram
@@ -59,21 +60,32 @@ doc2 = Edit.updateNodeData 3 (IntData 42) workingDoc
 wd2 = Build.buildWorkingDocument (Build.buildDocument detachedDoc)
 wd2u = wd2
          |> Edit.insertNode attachment 4 1
-         |> Result.andThen (Edit.deleteNode 1)
+         |> Result.andThen (Edit.cutNode 1)
 
 wd3 = Build.buildWorkingDocument (Build.buildDocument detachedDoc)
 wd3u = wd3
-         |> Edit.moveNode 0 4 1
+         |> Edit.cutNode 0
+         |> Result.andThen (Edit.pasteNode 0 4 1)
 
 view : Model -> Html Msg
 view model =
   div []
-    [ showDoc doc,
+    [ 
+
+      p [] [ text "." ],
+
+      showDoc doc,
       p [] [ text "." ],
       showWDoc workingDoc,
       p [] [ text "." ],
       showWDocR doc2,
       p [] [ text "." ],
-      showWDocR wd2u
+      showWDocR wd2u,
+      p [] [ text "." ],
+      showWDocR wd3u,
+      p [] [ text "." ],
+
+      p [] [text "." ]
+
     ]
  

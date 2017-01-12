@@ -1,8 +1,8 @@
 module Olw.Document.Edit exposing (
     insertNode,
     updateNodeData,
-    deleteNode,
-    moveNode
+    cutNode,
+    pasteNode
   )
 
 import Array exposing (Array)
@@ -72,6 +72,12 @@ insertNode detachedNode parentId index workingDocument =
       wd = setNodesParent newNodeId parentId workingDocWithAddedNodes
   in  addChildToParentInDoc parentId newNodeId index wd
 
+pasteNode : Int -> Int -> Int ->
+            WorkingDocument tData -> Result String (WorkingDocument tData)
+pasteNode nodeId parentId index workingDocument =
+  let wd = setNodesParent nodeId parentId workingDocument
+  in  addChildToParentInDoc parentId nodeId index wd
+
 addChildToParentInDoc : Int -> Int -> Int ->
                         WorkingDocument tData -> Result String (WorkingDocument tData)
 addChildToParentInDoc parentId childId index doc =
@@ -126,12 +132,12 @@ transformNode nodeId update workingDocument =
         in  Ok newWorkingDoc
       _ -> Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " does not exist in document")
 
--- deleteNode
+-- cutNode
 -- removes a node with given id by updating its parent to no longer include
 -- it as a child
 -- the node remains in the documents node array until cleanup is performed
-deleteNode : Int -> WorkingDocument tData -> Result String (WorkingDocument tData)
-deleteNode nodeId workingDocument =
+cutNode : Int -> WorkingDocument tData -> Result String (WorkingDocument tData)
+cutNode nodeId workingDocument =
   let (WorkingDocument {document, parentIds}) = workingDocument
       maybeParentId = maybeFlatten (Array.get nodeId parentIds)
       updateParentContent parentData =
@@ -139,12 +145,17 @@ deleteNode nodeId workingDocument =
           Node {childIds} ->
             Node {childIds = List.filter (\i -> i /= nodeId) childIds}
           other -> other
+      clearParent = Array.set nodeId Nothing
   in  case maybeParentId of
         Just parentId ->
-          transformNodeContent parentId updateParentContent workingDocument
-        Nothing -> Err ("Edit.deleteNode: could not lookup parent of node with id: " ++ (toString nodeId))
+          workingDocument
+            |> transformParentIds clearParent
+            |> transformNodeContent parentId updateParentContent
+        Nothing -> Err ("Edit.cutNode: could not lookup parent of node with id: " ++ (toString nodeId))
 
-moveNode : Int -> Int -> Int ->
-           WorkingDocument tData -> Result String (WorkingDocument tData)
-moveNode nodeId newParentId newIndex oldDoc =
-  Ok oldDoc
+transformParentIds : (Array (Maybe Int) -> Array (Maybe Int)) ->
+                     WorkingDocument tData -> WorkingDocument tData
+transformParentIds transform workingDocument =
+  let (WorkingDocument {document, parentIds}) = workingDocument
+      updatedParentIds = transform parentIds
+  in  WorkingDocument {document = document, parentIds = updatedParentIds}
