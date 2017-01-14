@@ -24,24 +24,24 @@ buildDocument detached =
 addDetachedNode : DetachedNode tData -> Document tData -> Document tData
 addDetachedNode detachedNode document =
   let (Document {rootId, versionedNodes}) = document
-  in case detachedNode of
-    DetachedLeaf data ->
-      let rootId = Array.length versionedNodes
-          newNode = VersionedNode {version = 0, node = Leaf data}
-          newNodes = Array.push newNode versionedNodes
-      in Document {rootId = rootId, versionedNodes = newNodes}
-    DetachedNode children ->
-      let addChild detached (ids, doc) =
-            let newDoc = addDetachedNode detached doc
-                (Document {rootId, versionedNodes}) = newDoc
-            in (rootId :: ids, newDoc)
-          (childIdsRev, docWithChildren) = List.foldl addChild ([], document) children
-          (Document {rootId, versionedNodes}) = docWithChildren
-          newRootId = Array.length versionedNodes
-          childIds = List.reverse childIdsRev
-          newNode = VersionedNode {version = 0, node = Node {childIds = childIds}}
-          newNodes = Array.push newNode versionedNodes
-      in  Document {rootId = newRootId, versionedNodes = newNodes}
+      (DetachedNode {data, children}) = detachedNode
+
+      addChild detached (ids, doc) =
+        let newDoc = addDetachedNode detached doc
+            (Document {rootId, versionedNodes}) = newDoc
+        in (rootId :: ids, newDoc)
+
+      (childIdsRev, docWithChildren) = List.foldl addChild ([], document) children
+
+      result =
+        let (Document {rootId, versionedNodes}) = docWithChildren
+            newRootId = Array.length versionedNodes
+            childIds = List.reverse childIdsRev
+            newNode = VersionedNode {version = 0, node = Node {data = data, childIds = childIds}}
+            newNodes = Array.push newNode versionedNodes
+        in  Document {rootId = newRootId, versionedNodes = newNodes}
+  in  result
+
 
 buildWorkingDocument : Document tData -> WorkingDocument tData
 buildWorkingDocument document =

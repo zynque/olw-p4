@@ -20,7 +20,7 @@ type VersionedNode tData = VersionedNode {
   node: Node tData
 }
 
-type Node tData = Node {childIds: List Int} | Leaf tData
+type Node tData = Node {data: tData, childIds: List Int}
 
 getNode : Int -> Document tData -> Maybe (VersionedNode tData)
 getNode nodeId vDoc =
@@ -30,10 +30,7 @@ getNode nodeId vDoc =
 childrenOf : Int -> Document tData -> List Int
 childrenOf nodeId doc =
   let maybeNode = doc |> getNode nodeId
-      childrenOfNode docNode = case docNode of
---        Node {childIds} -> Array.toList childIndices
-        Node {childIds} -> childIds
-        _ -> []
+      childrenOfNode (Node {childIds}) = childIds
       childrenOfVersionedNode (VersionedNode {version, node}) =
         childrenOfNode node
       children = Maybe.map childrenOfVersionedNode maybeNode  

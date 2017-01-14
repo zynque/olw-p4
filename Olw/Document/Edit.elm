@@ -17,14 +17,11 @@ import Olw.Document.Build as Build exposing (..)
 offsetNodeBy : Int -> VersionedNode tData -> VersionedNode tData
 offsetNodeBy offset versionedNode =
   let (VersionedNode {version, node}) = versionedNode
-      newNode = case node of
-        Node {childIds} ->
-          --InternalNode {childIndices = Array.map (\n -> n + offset) childIndices}
-          Node {childIds = List.map (\n -> n + offset) childIds}
-        other -> other
+      (Node {data, childIds}) = node
+      newChildIds = List.map (\n -> n + offset) childIds
   in  VersionedNode {
         version = version,
-        node = newNode
+        node = Node {data = data, childIds = newChildIds}
       }
 
 offsetNodesBy : Int -> Array (VersionedNode tData) -> List (VersionedNode tData)
@@ -75,18 +72,22 @@ insertNode detachedNode parentId index workingDocument =
 pasteNode : Int -> Int -> Int ->
             WorkingDocument tData -> Result String (WorkingDocument tData)
 pasteNode nodeId parentId index workingDocument =
-  let wd = setNodesParent nodeId parentId workingDocument
-  in  addChildToParentInDoc parentId nodeId index wd
+  let (WorkingDocument {parentIds}) = workingDocument
+      currentParent = maybeFlatten (Array.get nodeId parentIds)
+  in  case currentParent of
+        Just id -> Err ("Edit.pasteNode: Node with id: " ++ (toString nodeId) ++ " is already attached to document")
+        _ ->
+          let wd = setNodesParent nodeId parentId workingDocument
+          in  addChildToParentInDoc parentId nodeId index wd
 
 addChildToParentInDoc : Int -> Int -> Int ->
                         WorkingDocument tData -> Result String (WorkingDocument tData)
 addChildToParentInDoc parentId childId index doc =
-  let update docNode =
-    case docNode of
-    Node {childIds} -> Node {
-      childIds = listInsertBefore index childId childIds
-    }
-    other -> other
+  let update (Node {data, childIds}) =
+        Node {
+          data = data,
+          childIds = listInsertBefore index childId childIds
+        }
   in  transformNodeContent parentId update doc
 
 setNodesParent : Int -> Int -> WorkingDocument tData -> WorkingDocument tData
@@ -100,12 +101,14 @@ setNodesParent nodeId newParentId workingDocument =
 updateNodeData : Int -> tData ->
              WorkingDocument tData -> Result String (WorkingDocument tData)
 updateNodeData nodeId newData oldDoc =
-  updateNode nodeId (Leaf newData) oldDoc
+  let transform (Node {data, childIds}) = Node {data = newData, childIds = childIds}
+  in  transformNodeContent nodeId transform oldDoc
 
-updateNode : Int -> Node tData ->
+updateNodeChildIds : Int -> List Int ->
                     WorkingDocument tData -> Result String (WorkingDocument tData)
-updateNode nodeId newData oldDoc =
-  transformNodeContent nodeId (\n -> newData) oldDoc
+updateNodeChildIds nodeId newChildIds oldDoc =
+  let transform (Node {data, childIds}) = Node {data = data, childIds = newChildIds}
+  in  transformNodeContent nodeId transform oldDoc
 
 transformNodeContent : Int -> (Node tData -> Node tData) ->
                     WorkingDocument tData -> Result String (WorkingDocument tData)
@@ -140,11 +143,11 @@ cutNode : Int -> WorkingDocument tData -> Result String (WorkingDocument tData)
 cutNode nodeId workingDocument =
   let (WorkingDocument {document, parentIds}) = workingDocument
       maybeParentId = maybeFlatten (Array.get nodeId parentIds)
-      updateParentContent parentData =
-        case parentData of
-          Node {childIds} ->
-            Node {childIds = List.filter (\i -> i /= nodeId) childIds}
-          other -> other
+      updateParentContent (Node {data, childIds}) =
+        Node {
+          data = data,
+          childIds = List.filter (\i -> i /= nodeId) childIds
+        }
       clearParent = Array.set nodeId Nothing
   in  case maybeParentId of
         Just parentId ->

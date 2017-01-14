@@ -7,7 +7,6 @@ import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Build as Build exposing (..)
 import Olw.Document.Show as Show exposing (..)
 import Olw.Document.Edit as Edit exposing (..)
-import Olw.Document.ElmCoreExt exposing (..)
 
 main =
   Html.beginnerProgram
@@ -46,11 +45,11 @@ showWDocR d = showLines ("Working Document" :: (Show.showResult Show.showWorking
 
 -- samples
 
-detachedDoc = let (n,s,i) = Detached.builderFunctions
-              in  n[s "a", i 3, n[s "b", i 2]]
+detachedDoc = let (dn, s, i, sdn, idn) = Detached.builderFunctions
+              in  dn (s "a", [sdn "b", idn 42, dn (s "c", [sdn "d", idn 43])])
 
-attachment = let (n,s,i) = Detached.builderFunctions
-             in  n[i 8, i 9]
+attachment = let (dn, s, i, sdn, idn) = Detached.builderFunctions
+             in  dn (i 2, [idn 8, idn 9])
 
 doc = Build.buildDocument detachedDoc
 workingDoc = Build.buildWorkingDocument doc
@@ -67,13 +66,18 @@ wd3u = wd3
          |> Edit.cutNode 0
          |> Result.andThen (Edit.pasteNode 0 4 1)
 
+wd3failedUpdate = wd3
+         |> Edit.pasteNode 0 4 1
+
 view : Model -> Html Msg
 view model =
   div []
     [ 
 
       p [] [ text "." ],
-
+      p [] [ text (toString detachedDoc)],
+      p [] [ text "." ],
+ 
       showDoc doc,
       p [] [ text "." ],
       showWDoc workingDoc,
@@ -84,8 +88,7 @@ view model =
       p [] [ text "." ],
       showWDocR wd3u,
       p [] [ text "." ],
-
+      showWDocR wd3failedUpdate,
       p [] [text "." ]
-
     ]
  
