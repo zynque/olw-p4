@@ -7,8 +7,8 @@ import Array exposing (Array)
 import String exposing (join)
 import Olw.Document.Data exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
-import Olw.Document.Document exposing (..)
-import Olw.Document.WorkingDocument exposing (..)
+import Olw.Document.Document as Document exposing (..)
+import Olw.Document.WorkingDocument as WorkingDocument exposing (..)
 
 emptyDocument = Document {rootId = 0, versionedNodes = Array.fromList []}
 
@@ -53,6 +53,6 @@ buildWorkingDocument document =
 setParentNodeIds : Maybe Int -> Int -> Document tData -> Array (Maybe Int) -> Array (Maybe Int)
 setParentNodeIds parentId nodeId document parentIds =
   let updatedParents = Array.set nodeId parentId parentIds 
-      childIds = document |> childrenOf nodeId
+      childIds = document |> Document.childrenOf nodeId
       setChildsParent childId parentIds = setParentNodeIds (Just nodeId) childId document parentIds
   in  List.foldl setChildsParent updatedParents childIds

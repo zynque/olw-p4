@@ -1,5 +1,6 @@
 module Olw.Document.WorkingDocument exposing(
-    WorkingDocument(..)
+    WorkingDocument(..),
+    parentOf, childrenOf, pathFromRootTo
   )
 
 import Array exposing (Array)
@@ -36,3 +37,12 @@ childrenOf : Int -> WorkingDocument tData -> List Int
 childrenOf nodeId wdoc =
   let (WorkingDocument {document, parentIds}) = wdoc
   in  Document.childrenOf nodeId document
+
+pathFromRootTo : Int -> WorkingDocument tData -> List Int
+pathFromRootTo nodeId wdoc = pathToRootFrom nodeId wdoc |> List.reverse
+
+pathToRootFrom : Int -> WorkingDocument tData -> List Int
+pathToRootFrom nodeId wdoc =
+  case (parentOf nodeId wdoc) of
+    Nothing -> [nodeId]
+    Just parentId -> nodeId :: (pathToRootFrom parentId wdoc)

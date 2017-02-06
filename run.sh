@@ -1,1 +1,1 @@
-elm-reactor
+elm-reactor &
