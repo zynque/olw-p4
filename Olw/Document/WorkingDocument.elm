@@ -3,7 +3,7 @@ module Olw.Document.WorkingDocument exposing(
     getVersionedNode, parentOf, childrenOf, pathFromRootTo
   )
 
-import Array exposing (Array)
+import Array.Hamt as Array exposing (Array)
 import String exposing (join)
 import Olw.Document.Document as Document exposing (..)
 

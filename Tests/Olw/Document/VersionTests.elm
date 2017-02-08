@@ -74,29 +74,48 @@ update parentNodeId data workingDocument =
       index = 0
   in  insertNode detachedNode parentNodeId index workingDocument
 
--- test
+
 
 initialVersionDoc = Build.beginWorkingDocument (buildRootVersionNode "0a")
 
-expectedVersion = Version {
+expectedVersion1 = Version {
     mergedFromNodeId = Nothing,
     data = "1a",
     lsaNodeId = Just 0
   }
 
-expectedNode = VersionedNode {
+expectedNode1 = VersionedNode {
   version = 0,
-  node = Node {data = expectedVersion, childIds = []}}
+  node = Node {data = expectedVersion1, childIds = []}}
 
-actualNode : Result String (VersionedNode (Version String))
-actualNode = initialVersionDoc
+actualNode1 : Result String (VersionedNode (Version String))
+actualNode1 = initialVersionDoc
                |> update 0 "1a"
                |> Result.andThen ((WorkingDocument.getVersionedNode 1) >> (Result.fromMaybe "node not found")) 
+
+expectedVersion2 = Version {
+    mergedFromNodeId = Nothing,
+    data = "1b",
+    lsaNodeId = Just 0
+  }
+
+expectedNode2 = VersionedNode {
+  version = 0,
+  node = Node {data = expectedVersion2, childIds = []}}
+
+actualNode2 : Result String (VersionedNode (Version String))
+actualNode2 = initialVersionDoc
+                |> update 0 "1a"
+                |> Result.andThen (update 0 "1b")
+                |> Result.andThen ((WorkingDocument.getVersionedNode 2) >> (Result.fromMaybe "node not found"))
 
 versionTest : Test
 versionTest =
   describe "Version" [
-    test "update should add new version node" <|
-      \() -> actualNode
-        |> Expect.equal (Ok (expectedNode))
+    test "update should extend branch with new version node" <|
+      \() -> actualNode1
+        |> Expect.equal (Ok (expectedNode1)),
+    test "update should add new branch" <|
+      \() -> actualNode2
+        |> Expect.equal (Ok (expectedNode2))
   ]

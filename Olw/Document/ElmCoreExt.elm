@@ -6,7 +6,7 @@ module Olw.Document.ElmCoreExt exposing (
     maybeFlatten
   )
 
-import Array exposing (Array)
+import Array.Hamt as Array exposing (Array)
 
 arrayInsertBefore : Int -> t -> Array t -> Array t
 arrayInsertBefore index item arr =

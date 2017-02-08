@@ -6,7 +6,7 @@ module Olw.Document.Document exposing (
     childrenOf
   )
 
-import Array exposing (Array)
+import Array.Hamt as Array exposing (Array)
 import String exposing (join)
 import Olw.Document.Data exposing (..)
 

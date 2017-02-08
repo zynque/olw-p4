@@ -4,7 +4,7 @@ module Olw.Document.Show exposing (
     showResult
   )
 
-import Array exposing (Array)
+import Array.Hamt as Array exposing (Array)
 import String exposing (join)
 import Olw.Document.Data exposing (..)
 import Olw.Document.Document exposing (..)

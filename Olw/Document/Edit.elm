@@ -5,7 +5,7 @@ module Olw.Document.Edit exposing (
     pasteNode
   )
 
-import Array exposing (Array)
+import Array.Hamt as Array exposing (Array)
 import String exposing (join)
 import Olw.Document.Data exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
