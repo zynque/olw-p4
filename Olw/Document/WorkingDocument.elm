@@ -1,6 +1,6 @@
 module Olw.Document.WorkingDocument exposing(
     WorkingDocument(..),
-    parentOf, childrenOf, pathFromRootTo
+    getVersionedNode, parentOf, childrenOf, pathFromRootTo
   )
 
 import Array exposing (Array)

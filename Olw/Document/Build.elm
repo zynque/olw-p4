@@ -1,6 +1,7 @@
 module Olw.Document.Build exposing (
     buildDocument,
-    buildWorkingDocument
+    buildWorkingDocument,
+    beginWorkingDocument
   )
 
 import Array exposing (Array)
@@ -56,3 +57,13 @@ setParentNodeIds parentId nodeId document parentIds =
       childIds = document |> Document.childrenOf nodeId
       setChildsParent childId parentIds = setParentNodeIds (Just nodeId) childId document parentIds
   in  List.foldl setChildsParent updatedParents childIds
+
+beginWorkingDocument : tData -> WorkingDocument tData
+beginWorkingDocument data =
+  let document = Document {
+    rootId = 0,
+    versionedNodes = Array.fromList [
+      VersionedNode {version = 0, node = Node {data = data, childIds = []}}
+    ]
+  }
+  in buildWorkingDocument document
