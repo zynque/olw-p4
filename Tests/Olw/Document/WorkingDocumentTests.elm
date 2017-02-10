@@ -7,16 +7,19 @@ import Olw.Document.WorkingDocument as WorkingDocument exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Build as Build exposing (..)
 
+
 --         tree:           a(5)
 --                     /    |     \
 --                   b(0)  2(1)   c(4)
 --                              /      \
 --                            d(2)   3(3)
-
+--
 detachedDoc = let (dn, s, i, sdn, idn) = Detached.builderFunctions
               in  dn (s "a", [sdn "b", idn 2, dn (s "c", [sdn "d", idn 3])])
-doc = Build.buildDocument detachedDoc
-workingDoc = Build.buildWorkingDocument doc
+
+
+workingDoc = Build.buildWorkingDocument detachedDoc
+
 
 workingDocumentTest : Test
 workingDocumentTest =
