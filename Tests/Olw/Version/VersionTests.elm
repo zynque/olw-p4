@@ -1,4 +1,4 @@
-module Tests.Olw.Document.VersionTests exposing(..)
+module Tests.Olw.Version.VersionTests exposing(..)
 
 import Test exposing (..)
 import Expect
@@ -7,7 +7,7 @@ import Olw.Document.Document exposing (..)
 import Olw.Document.WorkingDocument as WorkingDocument exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Build as Build exposing (..)
-import Olw.Document.Version as Version exposing (..)
+import Olw.Version.Version as Version exposing (..)
 
 initialVersionDoc = Build.beginWorkingDocument (Version.buildRootVersionNode "0a")
 

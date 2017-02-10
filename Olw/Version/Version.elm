@@ -1,4 +1,4 @@
-module Olw.Document.Version exposing (
+module Olw.Version.Version exposing (
     buildRootVersionNode,
     update,
     Version(..),
@@ -115,7 +115,6 @@ lsaPathToRootFrom nodeId wdoc =
   in case lsaNodeId of
     Just lsaNodeId -> nodeId :: (lsaPathToRootFrom lsaNodeId wdoc)
     Nothing -> [nodeId]
-
 
 getLsca : Int -> Int -> WorkingDocument (Version d) -> Maybe Int
 getLsca nid1 nid2 wd =
