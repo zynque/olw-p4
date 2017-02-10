@@ -2,6 +2,7 @@ module Tests.Olw.Document.VersionTests exposing(..)
 
 import Test exposing (..)
 import Expect
+import List.Extra as ListExtra exposing (dropWhile)
 
 import Olw.Document.Document exposing (..)
 import Olw.Document.WorkingDocument as WorkingDocument exposing (..)
@@ -64,8 +65,20 @@ buildRootVersionNode d = Version {
 
 type alias WorkingVersionTree t = WorkingDocument (Version t)
 
---insertNode : DetachedNode tData -> Int -> Int ->
---             WorkingDocument tData -> Result String (WorkingDocument tData)
+nodeFromVersionedNode : VersionedNode d -> Node d
+nodeFromVersionedNode (VersionedNode {node}) = node
+
+dataFromNode : Node d -> d
+dataFromNode (Node {data}) = data
+
+dataFromVersionedNode : VersionedNode d -> d
+dataFromVersionedNode = nodeFromVersionedNode >> dataFromNode
+
+getVersion : Int -> WorkingDocument (Version d) -> Maybe (Version d)
+getVersion nodeId wdoc =
+  wdoc
+    |> WorkingDocument.getVersionedNode nodeId
+    |> Maybe.map dataFromVersionedNode
 
 update : Int -> d -> WorkingDocument (Version d) -> Result String (WorkingDocument (Version d))
 update parentNodeId data workingDocument =
@@ -109,13 +122,106 @@ actualNode2 = initialVersionDoc
                 |> Result.andThen (update 0 "1b")
                 |> Result.andThen ((WorkingDocument.getVersionedNode 2) >> (Result.fromMaybe "node not found"))
 
+largerExampleVersionTree =
+  initialVersionDoc
+    |> update 0 "1a"                   -- node 1
+    |> Result.andThen (update 0 "1b")  -- node 2
+    |> Result.andThen (update 2 "2a")  -- node 3
+    |> Result.andThen (update 2 "2b")  -- node 4
+
+getLastCommonElement : List t -> List t -> Maybe t
+getLastCommonElement l1 l2 =
+  let pairs = List.map2 (,) l1 l2
+      pairEqual (a, b) = a == b
+  in  pairs
+        |> ListExtra.takeWhile pairEqual
+        |> ListExtra.last
+        |> Maybe.map (\(a,b) -> a)
+
+lsaPathFromRootTo : Int -> WorkingDocument (Version d) -> List Int
+lsaPathFromRootTo nodeId wdoc = lsaPathToRootFrom nodeId wdoc |> List.reverse
+
+lsaPathToRootFrom : Int -> WorkingDocument (Version d) -> List Int
+lsaPathToRootFrom nodeId wdoc =
+  let lsaNodeId =
+        getVersion nodeId wdoc
+          |> Maybe.andThen (\(Version {lsaNodeId}) -> lsaNodeId) 
+  in case lsaNodeId of
+    Just lsaNodeId -> nodeId :: (lsaPathToRootFrom lsaNodeId wdoc)
+    Nothing -> [nodeId]
+
+
+getLsca : Int -> Int -> WorkingDocument (Version d) -> Maybe Int
+getLsca nid1 nid2 wd =
+  let path1 = lsaPathFromRootTo nid1 wd
+      path2 = lsaPathFromRootTo nid2 wd
+  in  getLastCommonElement path1 path2
+
+merge : Int -> Int -> d -> WorkingDocument (Version d) -> Result String (WorkingDocument (Version d))
+merge parentNid mergedFromNid data wdoc =
+  let parentsLsca = getLsca parentNid mergedFromNid wdoc
+      newVersion = Version {
+        mergedFromNodeId = Just mergedFromNid,
+        data = data,
+        lsaNodeId = parentsLsca
+      }
+      detachedNode = DetachedNode {data = newVersion, children = []}
+      index = 0
+  in  insertNode detachedNode parentNid index wdoc
+
+lsca_1_3 =
+  largerExampleVersionTree
+    |> Result.andThen (getLsca 1 3 >> Result.fromMaybe "no common ancestor")
+
+lsca_3_4 =
+  largerExampleVersionTree
+    |> Result.andThen (getLsca 3 4 >> Result.fromMaybe "no common ancestor")
+
 versionTest : Test
 versionTest =
   describe "Version" [
-    test "update should extend branch with new version node" <|
+
+    test "update extends branch with new version node" <|
       \() -> actualNode1
-        |> Expect.equal (Ok (expectedNode1)),
-    test "update should add new branch" <|
+        |> Expect.equal (Ok expectedNode1),
+    test "update adds new branch" <|
       \() -> actualNode2
-        |> Expect.equal (Ok (expectedNode2))
+        |> Expect.equal (Ok expectedNode2),
+    test "update extends branch further with correct lsa" <|
+      \() -> largerExampleVersionTree
+        |> Result.andThen (getVersion 4 >> Result.fromMaybe "no version")
+        |> Result.andThen (\(Version {lsaNodeId}) -> Result.fromMaybe "no lsa" lsaNodeId)
+        |> Expect.equal (Ok 2),
+
+    test "getLastCommonElement returns last common element" <|
+      \() -> getLastCommonElement [1, 2, 3, 4, 5] [1, 2, 3, 6, 7]
+        |> Expect.equal (Just 3),
+    test "getLastCommonElement returns Nothing when no common element" <|
+      \() -> getLastCommonElement [1, 2, 3] [4, 5]
+        |> Expect.equal Nothing,
+    test "getLastCommonElement returns Nothing for empty lists" <|
+      \() -> getLastCommonElement [] []
+        |> Expect.equal Nothing,
+
+    test "lsaPathFromRootTo element returns correct path (0 1)" <|
+      \() -> largerExampleVersionTree |> Result.map (lsaPathFromRootTo 1)
+        |> Expect.equal (Ok [0, 1]),
+    test "lsaPathFromRootTo element returns correct path (0 2 4)" <|
+      \() -> largerExampleVersionTree |> Result.map (lsaPathFromRootTo 4)
+        |> Expect.equal (Ok [0, 2, 4]),
+
+    test "determine lowest singular common ancestor of two nodes with same parent" <|
+      \() -> lsca_3_4
+        |> Expect.equal (Ok 2),
+    test "determine lowest singular common ancestor of two nodes further apart" <|
+      \() -> lsca_1_3
+        |> Expect.equal (Ok 0),
+
+    test "lsa of merged node is lsca of parents" <|
+      \() -> largerExampleVersionTree
+        |> Result.andThen (merge 1 3 "3a")
+        |> Result.andThen (getVersion 5 >> Result.fromMaybe "no version")
+        |> Result.andThen (\(Version {lsaNodeId}) -> Result.fromMaybe "no lsa" lsaNodeId)
+        |> Expect.equal (Ok 0)
+
   ]
