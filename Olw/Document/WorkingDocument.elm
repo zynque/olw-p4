@@ -7,7 +7,8 @@ import Array.Hamt as Array exposing (Array)
 import String exposing (join)
 import Olw.Document.Document as Document exposing (..)
 
--- additional document information, such as parent id of each node, allows for efficient navigation
+-- a WorkingDocument is a Document augmented with additional information,
+-- such as parent id of each node, allowing for efficient navigation
 -- and updates to a document
 
 type WorkingDocument tData = WorkingDocument {

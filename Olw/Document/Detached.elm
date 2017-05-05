@@ -13,6 +13,13 @@ type DetachedNode tData = DetachedNode {data: tData, children: List (DetachedNod
 -- compact syntax for creating detached document trees/subtrees
 -- for example, here's how to bring the builder syntax into a local scope:
 --
+-- abbreviations:
+--              dn:   detached node
+--              s :   string data
+--              i :   int data
+--              sdn : string data node
+--              idn : int data node
+--
 -- detachedDoc = let (dn, s, i, sdn, idn) = Detached.builderFunctions
 --               in  dn (s "a", [sdn "b", idn 2, dn (s "c", [sdn "d", idn 3])])
 --
