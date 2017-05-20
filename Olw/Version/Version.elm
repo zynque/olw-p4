@@ -20,7 +20,7 @@ import Olw.Document.Edit exposing (..)
 -- To determine a common ancestor to use when merging two versions, we note that
 -- version history forms a DAG (Directed Acyclic Graph), and we use the
 -- LSCA (Lowest Single Common Ancestor), as described in [*].
--- Note that a node in the DAG can have zero, one, or at most two parents.
+-- Note that a node in the history DAG can have zero, one, or at most two parents.
 -- This fact may simplify our algorithms.
 -- 
 -- We maintain an LSA (Lowest Single Ancestor) tree along side the version tree.

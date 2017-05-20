@@ -7,6 +7,7 @@ import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Build as Build exposing (..)
 import Olw.Document.Show as Show exposing (..)
 import Olw.Document.Edit as Edit exposing (..)
+import Olw.UI.DocumentTreeDiagram exposing (..)
 
 main =
   Html.beginnerProgram
@@ -70,6 +71,7 @@ view : Model -> Html Msg
 view model =
   div []
     [ 
+      svgExample,
 
       p [] [ text "." ],
       p [] [ text (toString detachedDoc)],
