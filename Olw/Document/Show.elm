@@ -1,7 +1,8 @@
 module Olw.Document.Show exposing (
     showWorkingDocument,
     showDocument,
-    showResult
+    showResult,
+    showDocumentData
   )
 
 import Array.Hamt as Array exposing (Array)
