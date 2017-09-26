@@ -1,7 +1,7 @@
 module Olw.Version.Version exposing (
     buildRootVersionNode,
     update,
-    Version(..),
+    Version,
     getLsca,
     getVersion,
     getLastCommonElement,
@@ -57,14 +57,15 @@ import Olw.Document.Edit exposing (..)
 
 
 
-type Version t = Version {
+type alias Version t = {
     mergedFromNodeId: Maybe Int,
     --parentNodeId:     Maybe Int
     data:             t,
     lsaNodeId:        Maybe Int
   }
 
-buildRootVersionNode d = Version {
+buildRootVersionNode : d -> Version d
+buildRootVersionNode d = {
     mergedFromNodeId = Nothing,
     --parentNodeId = Nothing,
     data = d,
@@ -90,7 +91,7 @@ getVersion nodeId wdoc =
 
 update : Int -> d -> WorkingDocument (Version d) -> Result String (WorkingDocument (Version d))
 update parentNodeId data workingDocument =
-  let version = Version {mergedFromNodeId = Nothing, data = data, lsaNodeId = Just parentNodeId}
+  let version = {mergedFromNodeId = Nothing, data = data, lsaNodeId = Just parentNodeId}
       detachedNode = DetachedNode {data = version, children = []}
       index = 0
   in  insertNode detachedNode parentNodeId index workingDocument
@@ -111,7 +112,7 @@ lsaPathToRootFrom : Int -> WorkingDocument (Version d) -> List Int
 lsaPathToRootFrom nodeId wdoc =
   let lsaNodeId =
         getVersion nodeId wdoc
-          |> Maybe.andThen (\(Version {lsaNodeId}) -> lsaNodeId) 
+          |> Maybe.andThen (\v -> v.lsaNodeId) 
   in case lsaNodeId of
     Just lsaNodeId -> nodeId :: (lsaPathToRootFrom lsaNodeId wdoc)
     Nothing -> [nodeId]
@@ -125,7 +126,7 @@ getLsca nid1 nid2 wd =
 merge : Int -> Int -> d -> WorkingDocument (Version d) -> Result String (WorkingDocument (Version d))
 merge parentNid mergedFromNid data wdoc =
   let parentsLsca = getLsca parentNid mergedFromNid wdoc
-      newVersion = Version {
+      newVersion = {
         mergedFromNodeId = Just mergedFromNid,
         data = data,
         lsaNodeId = parentsLsca

@@ -11,7 +11,7 @@ import Olw.Version.Version as Version exposing (..)
 
 initialVersionDoc = Build.beginWorkingDocument (Version.buildRootVersionNode "0a")
 
-expectedVersion1 = Version {
+expectedVersion1 = {
     mergedFromNodeId = Nothing,
     data = "1a",
     lsaNodeId = Just 0
@@ -26,7 +26,7 @@ actualNode1 = initialVersionDoc
                |> Version.update 0 "1a"
                |> Result.andThen ((WorkingDocument.getVersionedNode 1) >> (Result.fromMaybe "node not found")) 
 
-expectedVersion2 = Version {
+expectedVersion2 = {
     mergedFromNodeId = Nothing,
     data = "1b",
     lsaNodeId = Just 0
@@ -71,7 +71,7 @@ versionTest =
     test "update extends branch further with correct lsa" <|
       \() -> largerExampleVersionTree
         |> Result.andThen (getVersion 4 >> Result.fromMaybe "no version")
-        |> Result.andThen (\(Version {lsaNodeId}) -> Result.fromMaybe "no lsa" lsaNodeId)
+        |> Result.andThen (\version -> Result.fromMaybe "no lsa" version.lsaNodeId)
         |> Expect.equal (Ok 2),
 
     test "getLastCommonElement returns last common element" <|
@@ -102,7 +102,7 @@ versionTest =
       \() -> largerExampleVersionTree
         |> Result.andThen (merge 1 3 "3a")
         |> Result.andThen (getVersion 5 >> Result.fromMaybe "no version")
-        |> Result.andThen (\(Version {lsaNodeId}) -> Result.fromMaybe "no lsa" lsaNodeId)
+        |> Result.andThen (\version -> Result.fromMaybe "no lsa" version.lsaNodeId)
         |> Expect.equal (Ok 0)
 
   ]
