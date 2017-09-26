@@ -49,13 +49,13 @@ svgExample =
       ] 
 
 
-showNodeData : VersionedNode DocumentData -> String
-showNodeData versionedNode =
+showVersionedNodeData : VersionedNode NodeData -> String
+showVersionedNodeData versionedNode =
   let (VersionedNode {version, node}) = versionedNode
       (Node {data, childIds}) = node
-  in  showDocumentData data
+  in  showNodeData data
 
---nodeAsSvg : VersionedNode DocumentData -> Svg msg
+--nodeAsSvg : VersionedNode NodeData -> Svg msg
 --nodeAsSvg versionedNode xPos yPos =
 --  let label = showNodeData versionedNode
 --  in  circle [] [] 

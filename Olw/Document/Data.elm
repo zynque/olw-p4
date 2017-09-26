@@ -1,26 +1,16 @@
 module Olw.Document.Data exposing (
-    DocumentData(..),
-    NodeReference(..),
-    InternalNodeReference(..),
-    ExternalNodeReference(..),
-    DocumentReference(..)
+    NodeData(..),
+    ExternalNodeReference
   )
 
-type DocumentData =
+type NodeData =
   StringData String |
   IntData Int |
-  Reference NodeReference
+  InternalNodeRef Int |
+  ExternalNodeRef ExternalNodeReference
 
-type NodeReference = Internal InternalNodeReference | External ExternalNodeReference
-
-type InternalNodeReference = InternalNodeReference Int
-
-type ExternalNodeReference = ExternalNodeReference {
-  documentReference: DocumentReference,
+type alias ExternalNodeReference = {
+  documentUrl: String,
+  documentVersionId: Int,
   nodeId: Int
-}
-
-type DocumentReference = DocumentReference {
-  url: String,
-  version: Int
 }
