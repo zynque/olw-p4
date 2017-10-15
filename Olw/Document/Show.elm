@@ -31,13 +31,11 @@ showDocument (Document {rootId, versionedNodes}) =
       displayedChildren = List.map displayChild indexedChildren
   in ("root:" ++ (toString rootId)) :: displayedChildren
 
-showNode : VersionedNode NodeData -> String
-showNode versionedNode =
-  let (VersionedNode {version, node}) = versionedNode
-      (Node {data, childIds}) = node
-      content =
-         "d:(" ++ (showNodeData data) ++ ") c:(" ++ join "," (List.map toString childIds) ++ ")"
-  in  "v:" ++ (toString version) ++ " - " ++ content
+showNode : Node NodeData -> String
+showNode node =
+  let content =
+         "d:(" ++ (showNodeData node.data) ++ ") c:(" ++ join "," (List.map toString node.childIds) ++ ")"
+  in  "v:" ++ (toString node.version) ++ " - " ++ content
 
 showNodeData : NodeData -> String
 showNodeData data =

@@ -21,7 +21,7 @@ type WorkingDocument tData = WorkingDocument {
   -- positions: Array (Maybe Int)
 }
 
-getVersionedNode : Int -> WorkingDocument tData -> Maybe (VersionedNode tData)
+getVersionedNode : Int -> WorkingDocument tData -> Maybe (Node tData)
 getVersionedNode nodeId wdoc =
   let (WorkingDocument {document}) = wdoc
       (Document {rootId, versionedNodes}) = document

@@ -16,9 +16,11 @@ buildTest =
       \() ->
         let rootNodeData = "data"
             wd = Build.beginWorkingDocument rootNodeData
-            expectedNode = VersionedNode {
+            expectedNode = {
               version = 0,
-              node = Node {data = rootNodeData, childIds = []}}
+              data = rootNodeData,
+              childIds = []
+            }
         in WorkingDocument.getVersionedNode 0 wd
         |> Expect.equal (Just expectedNode)
   ]

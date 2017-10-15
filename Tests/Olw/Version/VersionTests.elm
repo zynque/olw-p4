@@ -17,11 +17,13 @@ expectedVersion1 = {
     lsaNodeId = Just 0
   }
 
-expectedNode1 = VersionedNode {
-  version = 0,
-  node = Node {data = expectedVersion1, childIds = []}}
+expectedNode1 = {
+    version = 0,
+    data = expectedVersion1,
+    childIds = []
+  }
 
-actualNode1 : Result String (VersionedNode (Version String))
+actualNode1 : Result String (Node (Version String))
 actualNode1 = initialVersionDoc
                |> Version.update 0 "1a"
                |> Result.andThen ((WorkingDocument.getVersionedNode 1) >> (Result.fromMaybe "node not found")) 
@@ -32,11 +34,13 @@ expectedVersion2 = {
     lsaNodeId = Just 0
   }
 
-expectedNode2 = VersionedNode {
-  version = 0,
-  node = Node {data = expectedVersion2, childIds = []}}
+expectedNode2 = {
+    version = 0,
+    data = expectedVersion2,
+    childIds = []
+  }
 
-actualNode2 : Result String (VersionedNode (Version String))
+actualNode2 : Result String (Node (Version String))
 actualNode2 = initialVersionDoc
                 |> update 0 "1a"
                 |> Result.andThen (update 0 "1b")

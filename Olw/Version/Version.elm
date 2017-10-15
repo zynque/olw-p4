@@ -74,25 +74,16 @@ buildRootVersionNode d = {
 
 type alias WorkingVersionTree t = WorkingDocument (Version t)
 
-nodeFromVersionedNode : VersionedNode d -> Node d
-nodeFromVersionedNode (VersionedNode {node}) = node
-
-dataFromNode : Node d -> d
-dataFromNode (Node {data}) = data
-
-dataFromVersionedNode : VersionedNode d -> d
-dataFromVersionedNode = nodeFromVersionedNode >> dataFromNode
-
 getVersion : Int -> WorkingDocument (Version d) -> Maybe (Version d)
 getVersion nodeId wdoc =
   wdoc
     |> WorkingDocument.getVersionedNode nodeId
-    |> Maybe.map dataFromVersionedNode
+    |> Maybe.map (\n -> n.data)
 
 update : Int -> d -> WorkingDocument (Version d) -> Result String (WorkingDocument (Version d))
 update parentNodeId data workingDocument =
   let version = {mergedFromNodeId = Nothing, data = data, lsaNodeId = Just parentNodeId}
-      detachedNode = DetachedNode {data = version, children = []}
+      detachedNode = {data = version, children = DetachedChildren []}
       index = 0
   in  insertNode detachedNode parentNodeId index workingDocument
 
@@ -131,6 +122,6 @@ merge parentNid mergedFromNid data wdoc =
         data = data,
         lsaNodeId = parentsLsca
       }
-      detachedNode = DetachedNode {data = newVersion, children = []}
+      detachedNode = {data = newVersion, children = DetachedChildren []}
       index = 0
   in  insertNode detachedNode parentNid index wdoc

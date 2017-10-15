@@ -1,3 +1,8 @@
+-- The data contained in an OLW node:
+--   a primitive type such as string or int,
+--   or a reference to another node in this document
+--   or a reference to a node in another document
+
 module Olw.Document.Data exposing (
     NodeData(..),
     ExternalNodeReference
@@ -6,6 +11,7 @@ module Olw.Document.Data exposing (
 type NodeData =
   StringData String |
   IntData Int |
+  FloatData Float |
   InternalNodeRef Int |
   ExternalNodeRef ExternalNodeReference
 

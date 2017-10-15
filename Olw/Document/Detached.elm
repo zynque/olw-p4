@@ -8,20 +8,22 @@ import Olw.Document.Data exposing (..)
 -- they are also arranged in an actual tree structure, whereas the document
 -- is based on an array
 
-type DetachedNode tData = DetachedNode {data: tData, children: List (DetachedNode tData)}
+type alias DetachedNode tData = {data: tData, children: DetachedChildren tData}
 
--- compact syntax for creating detached document trees/subtrees
+type DetachedChildren tData = DetachedChildren (List (DetachedNode tData))
+
+-- compact syntax for creating detached document trees/subtrees for testing
 -- for example, here's how to bring the builder syntax into a local scope:
 --
 -- abbreviations:
---              dn:   detached node
---              s :   string data
---              i :   int data
---              sdn : string data node
---              idn : int data node
+--              n  : detached node
+--              s  : string data
+--              i  : int data
+--              sl : string leaf node
+--              il : int leaf node
 --
--- detachedDoc = let (dn, s, i, sdn, idn) = Detached.builderFunctions
---               in  dn (s "a", [sdn "b", idn 2, dn (s "c", [sdn "d", idn 3])])
+-- detachedDoc = let (n, s, i, sl, il) = Detached.builderFunctions
+--               in  n (s "a", [sl "b", il 2, n (s "c", [sl "d", il 3])])
 --
 -- generates the tree:      a
 --                        / |  \
@@ -30,9 +32,9 @@ type DetachedNode tData = DetachedNode {data: tData, children: List (DetachedNod
 --                           d   3
 
 builderFunctions =
-  let dn (val, children) = DetachedNode {data = val, children = children}
+  let n (val, children) = {data = val, children = DetachedChildren children}
       s val = StringData val
       i val = IntData val
-      sdn val = dn (s val, [])
-      idn val = dn (i val, [])
-  in  (dn, s, i, sdn, idn)
+      sl val = n (s val, [])
+      il val = n (i val, [])
+  in  (n, s, i, sl, il)

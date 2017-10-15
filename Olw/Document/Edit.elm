@@ -15,13 +15,6 @@ import Olw.Document.ElmCoreExt exposing (..)
 import Olw.Document.Build as Build exposing (..)
 
 
-updateNodeData : Int -> tData ->
-             WorkingDocument tData -> Result String (WorkingDocument tData)
-updateNodeData nodeId newData oldDoc =
-  let transform (Node {data, childIds}) = Node {data = newData, childIds = childIds}
-  in  transformNodeContent nodeId transform oldDoc
-
-
 insertNode : DetachedNode tData -> Int -> Int ->
              WorkingDocument tData -> Result String (WorkingDocument tData)
 insertNode detachedNode parentId index workingDocument =
@@ -40,7 +33,8 @@ insertNode detachedNode parentId index workingDocument =
         in  (rootId, versionedNodes)
       docWithAddedNodes = Document {
         rootId = rootId,
-        versionedNodes = Array.append versionedNodes newNodes
+        versionedNodes = Array.append versionedNodes newNodes,
+        parentIds = Array.empty
       }
       workingDocWithAddedNodes = WorkingDocument {
         document = docWithAddedNodes,
@@ -58,10 +52,11 @@ cutNode : Int -> WorkingDocument tData -> Result String (WorkingDocument tData)
 cutNode nodeId workingDocument =
   let (WorkingDocument {document, parentIds}) = workingDocument
       maybeParentId = maybeFlatten (Array.get nodeId parentIds)
-      updateParentContent (Node {data, childIds}) =
-        Node {
-          data = data,
-          childIds = List.filter (\i -> i /= nodeId) childIds
+      updateParentContent node =
+        {
+          version = node.version + 1,
+          data = node.data,
+          childIds = List.filter (\i -> i /= nodeId) node.childIds
         }
       clearParent = Array.set nodeId Nothing
   in  case maybeParentId of
@@ -86,18 +81,17 @@ pasteNode nodeId parentId index workingDocument =
           in  addChildToParentInDoc parentId nodeId index wd
 
 
-offsetNodeBy : Int -> VersionedNode tData -> VersionedNode tData
-offsetNodeBy offset versionedNode =
-  let (VersionedNode {version, node}) = versionedNode
-      (Node {data, childIds}) = node
-      newChildIds = List.map (\n -> n + offset) childIds
-  in  VersionedNode {
-        version = version,
-        node = Node {data = data, childIds = newChildIds}
+offsetNodeBy : Int -> Node tData -> Node tData
+offsetNodeBy offset node =
+  let newChildIds = List.map (\n -> n + offset) node.childIds
+  in  {
+        version = node.version,
+        data = node.data,
+        childIds = newChildIds
       }
 
 
-offsetNodesBy : Int -> Array (VersionedNode tData) -> List (VersionedNode tData)
+offsetNodesBy : Int -> Array (Node tData) -> List (Node tData)
 offsetNodesBy offset nodes =
   let nodesList = Array.toList nodes
   in List.map (offsetNodeBy offset) nodesList
@@ -107,7 +101,11 @@ offsetDocBy : Int -> Document tData -> Document tData
 offsetDocBy offset doc =
   let (Document {rootId, versionedNodes}) = doc
       offsetVersionedNodes = Array.map (offsetNodeBy offset) versionedNodes
-  in  Document {rootId = rootId + offset, versionedNodes = offsetVersionedNodes}
+  in  Document {
+    rootId = rootId + offset,
+    versionedNodes = offsetVersionedNodes,
+    parentIds = Array.empty
+  }
 
 
 offsetParentsBy : Int -> Array (Maybe Int) -> Array (Maybe Int)
@@ -121,10 +119,11 @@ offsetParentsBy offset parents =
 addChildToParentInDoc : Int -> Int -> Int ->
                         WorkingDocument tData -> Result String (WorkingDocument tData)
 addChildToParentInDoc parentId childId index doc =
-  let update (Node {data, childIds}) =
-        Node {
-          data = data,
-          childIds = listInsertBefore index childId childIds
+  let update node =
+        {
+          version = node.version + 1,
+          data = node.data,
+          childIds = listInsertBefore index childId node.childIds
         }
   in  transformNodeContent parentId update doc
 
@@ -138,25 +137,27 @@ setNodesParent nodeId newParentId workingDocument =
   }
 
 
+updateNodeData : Int -> tData ->
+             WorkingDocument tData -> Result String (WorkingDocument tData)
+updateNodeData nodeId newData oldDoc =
+  let transform node = {version = node.version + 1, data = newData, childIds = node.childIds}
+  in  transformNodeContent nodeId transform oldDoc
+
+
 updateNodeChildIds : Int -> List Int ->
                     WorkingDocument tData -> Result String (WorkingDocument tData)
 updateNodeChildIds nodeId newChildIds oldDoc =
-  let transform (Node {data, childIds}) = Node {data = data, childIds = newChildIds}
+  let transform node = {version = node.version + 1, data = node.data, childIds = newChildIds}
   in  transformNodeContent nodeId transform oldDoc
 
 
 transformNodeContent : Int -> (Node tData -> Node tData) ->
                     WorkingDocument tData -> Result String (WorkingDocument tData)
 transformNodeContent nodeId updateContent oldDoc =
-  let updateVersionedNode (VersionedNode {version, node}) =
-        VersionedNode {
-          version = version + 1,
-          node = updateContent(node)
-        }
-  in transformNode nodeId updateVersionedNode oldDoc
+  transformNode nodeId updateContent oldDoc
 
 
-transformNode : Int -> (VersionedNode tData -> VersionedNode tData) ->
+transformNode : Int -> (Node tData -> Node tData) ->
                 WorkingDocument tData -> Result String (WorkingDocument tData)
 transformNode nodeId update workingDocument =
   let (WorkingDocument {document, parentIds}) = workingDocument
@@ -166,7 +167,11 @@ transformNode nodeId update workingDocument =
   in case maybeNewVersionedNode of
       Just newVersionedNode ->       
         let newVersionedNodes = Array.set nodeId newVersionedNode versionedNodes
-            newDoc = Document {rootId = rootId, versionedNodes = newVersionedNodes}
+            newDoc = Document {
+              rootId = rootId,
+              versionedNodes = newVersionedNodes,
+              parentIds = Array.empty
+            }
             newWorkingDoc = WorkingDocument {document = newDoc, parentIds = parentIds}
         in  Ok newWorkingDoc
       _ -> Err ("DocumentV.updateNode: Node id: " ++ (toString nodeId) ++ " does not exist in document")

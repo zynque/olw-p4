@@ -49,11 +49,8 @@ svgExample =
       ] 
 
 
-showVersionedNodeData : VersionedNode NodeData -> String
-showVersionedNodeData versionedNode =
-  let (VersionedNode {version, node}) = versionedNode
-      (Node {data, childIds}) = node
-  in  showNodeData data
+showVersionedNodeData : Node NodeData -> String
+showVersionedNodeData node = showNodeData node.data
 
 --nodeAsSvg : VersionedNode NodeData -> Svg msg
 --nodeAsSvg versionedNode xPos yPos =
