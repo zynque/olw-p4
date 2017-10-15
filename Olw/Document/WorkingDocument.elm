@@ -24,8 +24,7 @@ type WorkingDocument tData = WorkingDocument {
 getVersionedNode : Int -> WorkingDocument tData -> Maybe (Node tData)
 getVersionedNode nodeId wdoc =
   let (WorkingDocument {document}) = wdoc
-      (Document {rootId, nodes}) = document
-  in  Array.get nodeId nodes
+  in  Array.get nodeId document.nodes
 
 parentOf : Int -> WorkingDocument tData -> Maybe (Int)
 parentOf nodeId wdoc =

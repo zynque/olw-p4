@@ -19,21 +19,18 @@ insertNode : DetachedNode tData -> Int -> Int ->
              WorkingDocument tData -> Result String (WorkingDocument tData)
 insertNode detachedNode parentId index workingDocument =
   let (WorkingDocument {document, parentIds}) = workingDocument
-      (Document {rootId, nodes}) = document
       docToMerge = Build.buildDocument detachedNode
       workingDocToMerge = Build.buildWorkingDocumentFromDocument docToMerge
       parentIdsToMerge =
         let (WorkingDocument {parentIds}) = workingDocToMerge
         in  parentIds
-      originalNodesLength = Array.length nodes
+      originalNodesLength = Array.length document.nodes
       docAfterOffset = offsetDocBy originalNodesLength docToMerge
       parentIdsAfterOffset = offsetParentsBy originalNodesLength parentIdsToMerge
-      (newNodeId, newNodes) =
-        let (Document {rootId, nodes}) = docAfterOffset
-        in  (rootId, nodes)
-      docWithAddedNodes = Document {
-        rootId = rootId,
-        nodes = Array.append nodes newNodes,
+      (newNodeId, newNodes) = (docAfterOffset.rootId, docAfterOffset.nodes)
+      docWithAddedNodes = {
+        rootId = document.rootId,
+        nodes = Array.append document.nodes newNodes,
         parentIds = Array.empty
       }
       workingDocWithAddedNodes = WorkingDocument {
@@ -99,10 +96,9 @@ offsetNodesBy offset nodes =
 
 offsetDocBy : Int -> Document tData -> Document tData
 offsetDocBy offset doc =
-  let (Document {rootId, nodes}) = doc
-      offsetVersionedNodes = Array.map (offsetNodeBy offset) nodes
-  in  Document {
-    rootId = rootId + offset,
+  let offsetVersionedNodes = Array.map (offsetNodeBy offset) doc.nodes
+  in  {
+    rootId = doc.rootId + offset,
     nodes = offsetVersionedNodes,
     parentIds = Array.empty
   }
@@ -161,14 +157,13 @@ transformNode : Int -> (Node tData -> Node tData) ->
                 WorkingDocument tData -> Result String (WorkingDocument tData)
 transformNode nodeId update workingDocument =
   let (WorkingDocument {document, parentIds}) = workingDocument
-      (Document {rootId, nodes}) = document
-      maybeOldVersionedNode = Array.get nodeId nodes
+      maybeOldVersionedNode = Array.get nodeId document.nodes
       maybeNewVersionedNode = Maybe.map update maybeOldVersionedNode
   in case maybeNewVersionedNode of
       Just newVersionedNode ->       
-        let newVersionedNodes = Array.set nodeId newVersionedNode nodes
-            newDoc = Document {
-              rootId = rootId,
+        let newVersionedNodes = Array.set nodeId newVersionedNode document.nodes
+            newDoc = {
+              rootId = document.rootId,
               nodes = newVersionedNodes,
               parentIds = Array.empty
             }

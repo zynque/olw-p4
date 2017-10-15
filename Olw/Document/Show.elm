@@ -25,11 +25,11 @@ showWorkingDocument wdoc =
   in  shownParentIds :: shownDoc
 
 showDocument : Document NodeData -> List String
-showDocument (Document {rootId, nodes}) =
-  let indexedChildren = Array.toIndexedList nodes
+showDocument document =
+  let indexedChildren = Array.toIndexedList document.nodes
       displayChild (i, c) = "n:" ++ (toString i) ++ " " ++ (showNode c)
       displayedChildren = List.map displayChild indexedChildren
-  in ("root:" ++ (toString rootId)) :: displayedChildren
+  in ("root:" ++ (toString document.rootId)) :: displayedChildren
 
 showNode : Node NodeData -> String
 showNode node =

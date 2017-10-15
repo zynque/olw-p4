@@ -1,5 +1,5 @@
 module Olw.Document.Document exposing (
-    Document(..),
+    Document,
     Node,
     getNode,
     childrenOf
@@ -9,7 +9,7 @@ import Array.Hamt as Array exposing (Array)
 import String exposing (join)
 import Olw.Document.Data exposing (..)
 
-type Document tData = Document {
+type alias Document tData = {
   rootId: Int,
   nodes: Array (Node tData), -- indexed by node id
   parentIds: Array (Maybe Int)
@@ -18,9 +18,8 @@ type Document tData = Document {
 type alias Node tData = {version: Int, data: tData, childIds: List Int}
 
 getNode : Int -> Document tData -> Maybe (Node tData)
-getNode nodeId vDoc =
-  let (Document {rootId, nodes}) = vDoc
-  in  Array.get nodeId nodes
+getNode nodeId doc =
+  Array.get nodeId doc.nodes
 
 childrenOf : Int -> Document tData -> List Int
 childrenOf nodeId doc =

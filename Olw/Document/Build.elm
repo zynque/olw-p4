@@ -19,7 +19,7 @@ buildWorkingDocument = buildDocument >> buildWorkingDocumentFromDocument
 
 beginWorkingDocument : tData -> WorkingDocument tData
 beginWorkingDocument data =
-  let document = Document {
+  let document = {
     rootId = 0,
     nodes = Array.fromList [
       {version = 0, data = data, childIds = []}
@@ -29,7 +29,7 @@ beginWorkingDocument data =
   in buildWorkingDocumentFromDocument document
 
 
-emptyDocument = Document {rootId = 0, nodes = Array.fromList [], parentIds = Array.empty}
+emptyDocument = {rootId = 0, nodes = Array.fromList [], parentIds = Array.empty}
 
 
 buildDocument : DetachedNode tData -> Document tData
@@ -43,32 +43,28 @@ buildDocument detached =
 -- the rootId is the assigned id of the detached node
 addDetachedNode : DetachedNode tData -> Document tData -> Document tData
 addDetachedNode detachedNode document =
-  let (Document {rootId, nodes}) = document
-      {data, children} = detachedNode
+  let {data, children} = detachedNode
       (DetachedChildren childList) = children
 
       addChild detached (ids, doc) =
         let newDoc = addDetachedNode detached doc
-            (Document {rootId, nodes}) = newDoc
-        in (rootId :: ids, newDoc)
+        in (newDoc.rootId :: ids, newDoc)
 
       (childIdsRev, docWithChildren) = List.foldl addChild ([], document) childList
 
       result =
-        let (Document {rootId, nodes}) = docWithChildren
-            newRootId = Array.length nodes
+        let newRootId = Array.length docWithChildren.nodes
             childIds = List.reverse childIdsRev
             newNode = {version = 0, data = data, childIds = childIds}
-            newNodes = Array.push newNode nodes
-        in  Document {rootId = newRootId, nodes = newNodes, parentIds = Array.empty}
+            newNodes = Array.push newNode docWithChildren.nodes
+        in  {rootId = newRootId, nodes = newNodes, parentIds = Array.empty}
   in  result
 
 
 buildWorkingDocumentFromDocument : Document tData -> WorkingDocument tData
 buildWorkingDocumentFromDocument document =
-  let (Document {rootId, nodes}) = document
-      emptyParentIds = Array.repeat (Array.length nodes) Nothing
-      parentIds = setParentNodeIds Nothing rootId document emptyParentIds
+  let emptyParentIds = Array.repeat (Array.length document.nodes) Nothing
+      parentIds = setParentNodeIds Nothing document.rootId document emptyParentIds
   in  WorkingDocument {document = document, parentIds = parentIds}
 
 
