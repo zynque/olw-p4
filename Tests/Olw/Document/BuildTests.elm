@@ -6,7 +6,6 @@ import Expect
 import Olw.Document.Document as Document exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Build as Build exposing (..)
-import Olw.Document.WorkingDocument as WorkingDocument exposing (..)
 
 
 buildTest : Test
@@ -15,12 +14,12 @@ buildTest =
     test "beginWorkingDocument" <|
       \() ->
         let rootNodeData = "data"
-            wd = Build.beginWorkingDocument rootNodeData
+            doc = Build.beginDocument rootNodeData
             expectedNode = {
               version = 0,
               data = rootNodeData,
               childIds = []
             }
-        in WorkingDocument.getVersionedNode 0 wd
+        in Document.getNode 0 doc
         |> Expect.equal (Just expectedNode)
   ]

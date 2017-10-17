@@ -1,11 +1,12 @@
-module Tests.Olw.Document.WorkingDocumentTests exposing(..)
+module Tests.Olw.Document.DocumentTests exposing(..)
 
 import Test exposing (..)
 import Expect
 
-import Olw.Document.WorkingDocument as WorkingDocument exposing (..)
+import Olw.Document.Document as Document exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Build as Build exposing (..)
+import Array.Hamt as Array
 
 
 --         tree:           a(5)
@@ -18,30 +19,33 @@ detachedDoc = let (dn, s, i, sdn, idn) = Detached.builderFunctions
               in  dn (s "a", [sdn "b", idn 2, dn (s "c", [sdn "d", idn 3])])
 
 
-workingDoc = Build.buildWorkingDocument detachedDoc
+document = Build.buildDocument detachedDoc
 
 
-workingDocumentTest : Test
-workingDocumentTest =
-  describe "WorkingDocument" [
+documentTest : Test
+documentTest =
+  describe "Document" [
+    test "parents" <|
+      \() -> document.parentIds
+        |> Expect.equal (Array.fromList [Just 5, Just 5, Just 4, Just 4, Just 5, Nothing]),
     test "get parent" <|
-      \() -> WorkingDocument.parentOf 2 workingDoc
+      \() -> Document.parentOf 2 document
         |> Expect.equal (Just 4),
     test "get no parent" <|
-      \() -> WorkingDocument.parentOf 5 workingDoc
+      \() -> Document.parentOf 5 document
         |> Expect.equal Nothing,
 
     test "get children" <|
-      \() -> WorkingDocument.childrenOf 4 workingDoc
+      \() -> Document.childrenOf 4 document
         |> Expect.equal [2, 3],
     test "get no children" <|
-      \() -> WorkingDocument.childrenOf 3 workingDoc
+      \() -> Document.childrenOf 3 document
         |> Expect.equal [],
 
     test "path from root to node" <|
-      \() -> WorkingDocument.pathFromRootTo 2 workingDoc
+      \() -> Document.pathFromRootTo 2 document
         |> Expect.equal [5, 4, 2],
     test "path from root to root" <|
-      \() -> WorkingDocument.pathFromRootTo 5 workingDoc
+      \() -> Document.pathFromRootTo 5 document
         |> Expect.equal [5] 
   ]

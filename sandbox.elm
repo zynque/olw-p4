@@ -39,8 +39,8 @@ showLines lines =
   let pars = List.map (\l -> p [] [ text l ]) lines
   in  div [] pars
 
-showWDoc d = showLines ("WorkingDocument" :: (Show.showWorkingDocument d))
-showWDocR d = showLines ("Working Document" :: (Show.showResult Show.showWorkingDocument d))
+showWDoc d = showLines ("Document" :: (Show.showDocument d))
+showWDocR d = showLines ("Document" :: (Show.showResult Show.showDocument d))
 
 -- samples
 
@@ -50,16 +50,16 @@ detachedDoc = let (dn, s, i, sdn, idn) = Detached.builderFunctions
 attachment = let (dn, s, i, sdn, idn) = Detached.builderFunctions
              in  dn (i 2, [idn 8, idn 9])
 
-workingDoc = Build.buildWorkingDocument detachedDoc
+workingDoc = Build.buildDocument detachedDoc
 
 doc2 = Edit.updateNodeData 3 (IntData 42) workingDoc
 
-wd2 = Build.buildWorkingDocument detachedDoc
+wd2 = Build.buildDocument detachedDoc
 wd2u = wd2
          |> Edit.insertNode attachment 4 1
          |> Result.andThen (Edit.cutNode 1)
 
-wd3 = Build.buildWorkingDocument detachedDoc
+wd3 = Build.buildDocument detachedDoc
 wd3u = wd3
          |> Edit.cutNode 0
          |> Result.andThen (Edit.pasteNode 0 4 1)

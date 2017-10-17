@@ -3,13 +3,12 @@ module Tests.Olw.Version.VersionTests exposing(..)
 import Test exposing (..)
 import Expect
 
-import Olw.Document.Document exposing (..)
-import Olw.Document.WorkingDocument as WorkingDocument exposing (..)
+import Olw.Document.Document as Document exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Build as Build exposing (..)
 import Olw.Version.Version as Version exposing (..)
 
-initialVersionDoc = Build.beginWorkingDocument (Version.buildRootVersionNode "0a")
+initialVersionDoc = Build.beginDocument (Version.buildRootVersionNode "0a")
 
 expectedVersion1 = {
     mergedFromNodeId = Nothing,
@@ -26,7 +25,7 @@ expectedNode1 = {
 actualNode1 : Result String (Node (Version String))
 actualNode1 = initialVersionDoc
                |> Version.update 0 "1a"
-               |> Result.andThen ((WorkingDocument.getVersionedNode 1) >> (Result.fromMaybe "node not found")) 
+               |> Result.andThen ((Document.getNode 1) >> (Result.fromMaybe "node not found")) 
 
 expectedVersion2 = {
     mergedFromNodeId = Nothing,
@@ -44,7 +43,7 @@ actualNode2 : Result String (Node (Version String))
 actualNode2 = initialVersionDoc
                 |> update 0 "1a"
                 |> Result.andThen (update 0 "1b")
-                |> Result.andThen ((WorkingDocument.getVersionedNode 2) >> (Result.fromMaybe "node not found"))
+                |> Result.andThen ((Document.getNode 2) >> (Result.fromMaybe "node not found"))
 
 largerExampleVersionTree =
   initialVersionDoc

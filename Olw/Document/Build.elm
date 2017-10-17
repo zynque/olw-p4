@@ -1,8 +1,6 @@
 module Olw.Document.Build exposing (
     buildDocument,
-    buildWorkingDocumentFromDocument,
-    buildWorkingDocument,
-    beginWorkingDocument
+    beginDocument
   )
 
 import Array.Hamt as Array exposing (Array)
@@ -10,23 +8,16 @@ import String exposing (join)
 import Olw.Document.Data exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Document as Document exposing (..)
-import Olw.Document.WorkingDocument as WorkingDocument exposing (..)
 
 
-buildWorkingDocument : DetachedNode tData -> WorkingDocument tData
-buildWorkingDocument = buildDocument >> buildWorkingDocumentFromDocument
-
-
-beginWorkingDocument : tData -> WorkingDocument tData
-beginWorkingDocument data =
-  let document = {
+beginDocument : tData -> Document tData
+beginDocument data = {
     rootId = 0,
     nodes = Array.fromList [
       {version = 0, data = data, childIds = []}
     ],
     parentIds = Array.empty
   }
-  in buildWorkingDocumentFromDocument document
 
 
 emptyDocument = {rootId = 0, nodes = Array.fromList [], parentIds = Array.empty}
@@ -52,20 +43,23 @@ addDetachedNode detachedNode document =
 
       (childIdsRev, docWithChildren) = List.foldl addChild ([], document) childList
 
-      result =
+      newDoc =
         let newRootId = Array.length docWithChildren.nodes
             childIds = List.reverse childIdsRev
             newNode = {version = 0, data = data, childIds = childIds}
             newNodes = Array.push newNode docWithChildren.nodes
-        in  {rootId = newRootId, nodes = newNodes, parentIds = Array.empty}
-  in  result
-
-
-buildWorkingDocumentFromDocument : Document tData -> WorkingDocument tData
-buildWorkingDocumentFromDocument document =
-  let emptyParentIds = Array.repeat (Array.length document.nodes) Nothing
-      parentIds = setParentNodeIds Nothing document.rootId document emptyParentIds
-  in  WorkingDocument {document = document, parentIds = parentIds}
+        in  {
+          rootId = newRootId,
+          nodes = newNodes,
+          parentIds = Array.empty
+        }
+      emptyParentIds = Array.repeat (Array.length newDoc.nodes) Nothing
+      parentIds = setParentNodeIds Nothing newDoc.rootId newDoc emptyParentIds
+  in  {
+    rootId = newDoc.rootId,
+    nodes = newDoc.nodes,
+    parentIds = parentIds
+  }
 
 
 setParentNodeIds : Maybe Int -> Int -> Document tData -> Array (Maybe Int) -> Array (Maybe Int)

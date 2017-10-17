@@ -11,8 +11,7 @@ module Olw.Version.Version exposing (
 
 import Array.Hamt as Array exposing (Array)
 import List.Extra as ListExtra exposing (dropWhile)
-import Olw.Document.Document exposing (..)
-import Olw.Document.WorkingDocument as WorkingDocument exposing (..)
+import Olw.Document.Document as Document exposing (..)
 import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Build as Build exposing (..)
 import Olw.Document.Edit exposing (..)
@@ -72,20 +71,20 @@ buildRootVersionNode d = {
     lsaNodeId = Nothing
   }
 
-type alias WorkingVersionTree t = WorkingDocument (Version t)
+type alias WorkingVersionTree t = Document (Version t)
 
-getVersion : Int -> WorkingDocument (Version d) -> Maybe (Version d)
-getVersion nodeId wdoc =
-  wdoc
-    |> WorkingDocument.getVersionedNode nodeId
+getVersion : Int -> Document (Version d) -> Maybe (Version d)
+getVersion nodeId doc =
+  doc
+    |> Document.getNode nodeId
     |> Maybe.map (\n -> n.data)
 
-update : Int -> d -> WorkingDocument (Version d) -> Result String (WorkingDocument (Version d))
-update parentNodeId data workingDocument =
+update : Int -> d -> Document (Version d) -> Result String (Document (Version d))
+update parentNodeId data document =
   let version = {mergedFromNodeId = Nothing, data = data, lsaNodeId = Just parentNodeId}
       detachedNode = {data = version, children = DetachedChildren []}
       index = 0
-  in  insertNode detachedNode parentNodeId index workingDocument
+  in  insertNode detachedNode parentNodeId index document
 
 getLastCommonElement : List t -> List t -> Maybe t
 getLastCommonElement l1 l2 =
@@ -96,10 +95,10 @@ getLastCommonElement l1 l2 =
         |> ListExtra.last
         |> Maybe.map (\(a,b) -> a)
 
-lsaPathFromRootTo : Int -> WorkingDocument (Version d) -> List Int
+lsaPathFromRootTo : Int -> Document (Version d) -> List Int
 lsaPathFromRootTo nodeId wdoc = lsaPathToRootFrom nodeId wdoc |> List.reverse
 
-lsaPathToRootFrom : Int -> WorkingDocument (Version d) -> List Int
+lsaPathToRootFrom : Int -> Document (Version d) -> List Int
 lsaPathToRootFrom nodeId wdoc =
   let lsaNodeId =
         getVersion nodeId wdoc
@@ -108,13 +107,13 @@ lsaPathToRootFrom nodeId wdoc =
     Just lsaNodeId -> nodeId :: (lsaPathToRootFrom lsaNodeId wdoc)
     Nothing -> [nodeId]
 
-getLsca : Int -> Int -> WorkingDocument (Version d) -> Maybe Int
+getLsca : Int -> Int -> Document (Version d) -> Maybe Int
 getLsca nid1 nid2 wd =
   let path1 = lsaPathFromRootTo nid1 wd
       path2 = lsaPathFromRootTo nid2 wd
   in  getLastCommonElement path1 path2
 
-merge : Int -> Int -> d -> WorkingDocument (Version d) -> Result String (WorkingDocument (Version d))
+merge : Int -> Int -> d -> Document (Version d) -> Result String (Document (Version d))
 merge parentNid mergedFromNid data wdoc =
   let parentsLsca = getLsca parentNid mergedFromNid wdoc
       newVersion = {

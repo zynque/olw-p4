@@ -33,6 +33,4 @@ listSetAt index item lst =
   in  List.append left (item :: right) 
 
 maybeFlatten : Maybe (Maybe t) -> Maybe t
-maybeFlatten m = case m of
-  Just (v) -> v
-  Nothing -> Nothing
+maybeFlatten m = Maybe.withDefault Nothing m

@@ -5,7 +5,6 @@ import Svg.Attributes exposing (..)
 import Olw.Document.Show exposing (..)
 import Olw.Document.Data exposing (..)
 import Olw.Document.Document exposing (..)
-import Olw.Document.WorkingDocument exposing (..)
 
 
 -- Resource: https://llimllib.github.io/pymag-trees/
