@@ -37,8 +37,7 @@ getNode nodeId doc = Array.get nodeId doc.nodes
 childrenOf : Int -> Document tData -> List Int
 childrenOf nodeId doc =
   let maybeNode = doc |> getNode nodeId
-      childrenOfVersionedNode node = node.childIds
-      children = Maybe.map childrenOfVersionedNode maybeNode  
+      children = Maybe.map (\node -> node.childIds) maybeNode  
   in  Maybe.withDefault [] children
 
 

@@ -35,4 +35,5 @@ showNodeData data =
   case data of
     StringData s -> "\"" ++ s ++ "\""
     IntData i    -> toString i
+    FloatData f  -> toString f
     _            -> "?"

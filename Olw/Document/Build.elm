@@ -25,13 +25,21 @@ emptyDocument = {rootId = 0, nodes = Array.fromList [], parentIds = Array.empty}
 
 buildDocument : DetachedNode tData -> Document tData
 buildDocument detached =
-  addDetachedNode detached emptyDocument
+  let newDoc = addDetachedNode detached emptyDocument
+      emptyParentIds = Array.repeat (Array.length newDoc.nodes) Nothing
+      parentIds = setParentNodeIds Nothing newDoc.rootId newDoc emptyParentIds
+  in  {
+    rootId = newDoc.rootId,
+    nodes = newDoc.nodes,
+    parentIds = parentIds
+  }
 
 
 -- addDetachedNode
 -- recursive helper method takes doc of nodes added so far
 -- and returns it with the new detached node & its children added
 -- the rootId is the assigned id of the detached node
+-- parentIds is left empty to be filled in later
 addDetachedNode : DetachedNode tData -> Document tData -> Document tData
 addDetachedNode detachedNode document =
   let {data, children} = detachedNode
@@ -53,13 +61,7 @@ addDetachedNode detachedNode document =
           nodes = newNodes,
           parentIds = Array.empty
         }
-      emptyParentIds = Array.repeat (Array.length newDoc.nodes) Nothing
-      parentIds = setParentNodeIds Nothing newDoc.rootId newDoc emptyParentIds
-  in  {
-    rootId = newDoc.rootId,
-    nodes = newDoc.nodes,
-    parentIds = parentIds
-  }
+  in  newDoc
 
 
 setParentNodeIds : Maybe Int -> Int -> Document tData -> Array (Maybe Int) -> Array (Maybe Int)

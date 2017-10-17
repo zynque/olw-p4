@@ -14,9 +14,9 @@ import Array.Hamt as Array
 --                   b(0)  2(1)   c(4)
 --                              /      \
 --                            d(2)   3(3)
---
-detachedDoc = let (dn, s, i, sdn, idn) = Detached.builderFunctions
-              in  dn (s "a", [sdn "b", idn 2, dn (s "c", [sdn "d", idn 3])])
+
+detachedDoc = let (n, s, i, sl, il) = Detached.builderFunctions
+              in  n (s "a", [sl "b", il 2, n (s "c", [sl "d", il 3])])
 
 
 document = Build.buildDocument detachedDoc
@@ -28,6 +28,7 @@ documentTest =
     test "parents" <|
       \() -> document.parentIds
         |> Expect.equal (Array.fromList [Just 5, Just 5, Just 4, Just 4, Just 5, Nothing]),
+
     test "get parent" <|
       \() -> Document.parentOf 2 document
         |> Expect.equal (Just 4),
