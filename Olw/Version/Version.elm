@@ -73,20 +73,20 @@ buildRootVersionNode d = {
   }
 
 
-type alias WorkingVersionTree t = Document (Version t)
+type alias VersionTree d = Document (Version d)
 
 
-getVersion : Int -> Document (Version d) -> Maybe (Version d)
+getVersion : Int -> VersionTree d -> Maybe (Version d)
 getVersion nodeId doc =
   doc
     |> Document.getNode nodeId
     |> Maybe.map (\n -> n.data)
 
 
-update : Int -> d -> Document (Version d) -> Result String (Document (Version d))
+update : Int -> d -> VersionTree d -> Result String (VersionTree d)
 update parentNodeId data document =
   let version = {mergedFromNodeId = Nothing, data = data, lsaNodeId = Just parentNodeId}
-      detachedNode = {data = version, children = DetachedChildren []}
+      detachedNode = {data = version, detachedChildren = DetachedChildren []}
       index = 0
   in  insertNode detachedNode parentNodeId index document
 
@@ -101,11 +101,11 @@ getLastCommonElement l1 l2 =
         |> Maybe.map (\(a,b) -> a)
 
 
-lsaPathFromRootTo : Int -> Document (Version d) -> List Int
+lsaPathFromRootTo : Int -> VersionTree d -> List Int
 lsaPathFromRootTo nodeId wdoc = lsaPathToRootFrom nodeId wdoc |> List.reverse
 
 
-lsaPathToRootFrom : Int -> Document (Version d) -> List Int
+lsaPathToRootFrom : Int -> VersionTree d -> List Int
 lsaPathToRootFrom nodeId wdoc =
   let lsaNodeId =
         getVersion nodeId wdoc
@@ -115,14 +115,14 @@ lsaPathToRootFrom nodeId wdoc =
     Nothing -> [nodeId]
 
 
-getLsca : Int -> Int -> Document (Version d) -> Maybe Int
+getLsca : Int -> Int -> VersionTree d -> Maybe Int
 getLsca nid1 nid2 wd =
   let path1 = lsaPathFromRootTo nid1 wd
       path2 = lsaPathFromRootTo nid2 wd
   in  getLastCommonElement path1 path2
 
 
-merge : Int -> Int -> d -> Document (Version d) -> Result String (Document (Version d))
+merge : Int -> Int -> d -> VersionTree d -> Result String (VersionTree d)
 merge parentNid mergedFromNid data wdoc =
   let parentsLsca = getLsca parentNid mergedFromNid wdoc
       newVersion = {
@@ -130,6 +130,6 @@ merge parentNid mergedFromNid data wdoc =
         data = data,
         lsaNodeId = parentsLsca
       }
-      detachedNode = {data = newVersion, children = DetachedChildren []}
+      detachedNode = {data = newVersion, detachedChildren = DetachedChildren []}
       index = 0
   in  insertNode detachedNode parentNid index wdoc

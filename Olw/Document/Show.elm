@@ -24,11 +24,13 @@ showDocument document =
       displayedParentIds = " parents:" ++ (toString (Array.toIndexedList document.parentIds))
   in ("root:" ++ (toString document.rootId) ++ displayedParentIds) :: displayedChildren
 
+
 showNode : Node NodeData -> String
 showNode node =
   let content =
          "d:(" ++ (showNodeData node.data) ++ ") c:(" ++ join "," (List.map toString node.childIds) ++ ")"
   in  "v:" ++ (toString node.version) ++ " - " ++ content
+
 
 showNodeData : NodeData -> String
 showNodeData data =

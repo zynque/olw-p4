@@ -37,19 +37,19 @@ buildDocument detached =
 
 -- addDetachedNode
 -- recursive helper method takes doc of nodes added so far
--- and returns it with the new detached node & its children added
+-- and returns it with the new detached node & its decendants added
 -- the rootId is the assigned id of the detached node
 -- parentIds is left empty to be filled in later
 addDetachedNode : DetachedNode tData -> Document tData -> Document tData
 addDetachedNode detachedNode document =
-  let {data, children} = detachedNode
-      (DetachedChildren childList) = children
+  let {data, detachedChildren} = detachedNode
+      (DetachedChildren children) = detachedChildren
 
       addChild detached (ids, doc) =
         let newDoc = addDetachedNode detached doc
         in (newDoc.rootId :: ids, newDoc)
 
-      (childIdsRev, docWithChildren) = List.foldl addChild ([], document) childList
+      (childIdsRev, docWithChildren) = List.foldl addChild ([], document) children
 
       newDoc =
         let newRootId = Array.length docWithChildren.nodes

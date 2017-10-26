@@ -8,12 +8,14 @@ module Olw.Document.Data exposing (
     ExternalNodeReference
   )
 
+
 type NodeData =
   StringData String |
   IntData Int |
   FloatData Float |
   InternalNodeRef Int |
   ExternalNodeRef ExternalNodeReference
+
 
 type alias ExternalNodeReference = {
   documentUrl: String,

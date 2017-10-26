@@ -8,7 +8,7 @@ import Olw.Document.Data exposing (..)
 -- they are also arranged in an actual tree structure, whereas the document
 -- is based on an array
 
-type alias DetachedNode tData = {data: tData, children: DetachedChildren tData}
+type alias DetachedNode tData = {data: tData, detachedChildren: DetachedChildren tData}
 
 type DetachedChildren tData = DetachedChildren (List (DetachedNode tData))
 
@@ -32,7 +32,7 @@ type DetachedChildren tData = DetachedChildren (List (DetachedNode tData))
 --                           d   3
 
 builderFunctions =
-  let n (val, children) = {data = val, children = DetachedChildren children}
+  let n (val, children) = {data = val, detachedChildren = DetachedChildren children}
       s val = StringData val
       i val = IntData val
       sl val = n (s val, [])
