@@ -25,12 +25,12 @@ emptyDocument = {rootId = 0, nodes = Array.fromList [], parentIds = Array.empty}
 
 buildDocument : DetachedNode tData -> Document tData
 buildDocument detached =
-  let newDoc = addDetachedNode detached emptyDocument
-      emptyParentIds = Array.repeat (Array.length newDoc.nodes) Nothing
-      parentIds = setParentNodeIds Nothing newDoc.rootId newDoc emptyParentIds
+  let (rootId, nodes) = addDetachedNode detached Array.empty
+      emptyParentIds = Array.repeat (Array.length nodes) Nothing
+      parentIds = getParentNodeIds Nothing rootId nodes emptyParentIds
   in  {
-    rootId = newDoc.rootId,
-    nodes = newDoc.nodes,
+    rootId = rootId,
+    nodes = nodes,
     parentIds = parentIds
   }
 
@@ -40,33 +40,29 @@ buildDocument detached =
 -- and returns it with the new detached node & its decendants added
 -- the rootId is the assigned id of the detached node
 -- parentIds is left empty to be filled in later
-addDetachedNode : DetachedNode tData -> Document tData -> Document tData
-addDetachedNode detachedNode document =
+addDetachedNode : DetachedNode tData -> Array (Node tData) -> (Int, Array (Node tData))
+addDetachedNode detachedNode nodes =
   let {data, detachedChildren} = detachedNode
       (DetachedChildren children) = detachedChildren
 
-      addChild detached (ids, doc) =
-        let newDoc = addDetachedNode detached doc
-        in (newDoc.rootId :: ids, newDoc)
+      addChild detached (ids, nodes) =
+        let (newRootId, newNodes) = addDetachedNode detached nodes
+        in (newRootId :: ids, newNodes)
 
-      (childIdsRev, docWithChildren) = List.foldl addChild ([], document) children
+      (childIdsInReverse, decendantNodes) = List.foldl addChild ([], nodes) children
 
-      newDoc =
-        let newRootId = Array.length docWithChildren.nodes
-            childIds = List.reverse childIdsRev
-            newNode = {version = 0, data = data, childIds = childIds}
-            newNodes = Array.push newNode docWithChildren.nodes
-        in  {
-          rootId = newRootId,
-          nodes = newNodes,
-          parentIds = Array.empty
-        }
-  in  newDoc
+      childIds = List.reverse childIdsInReverse
+      newNode = {version = 0, data = data, childIds = childIds}
+      newNodes = Array.push newNode decendantNodes
+      newRootId = Array.length decendantNodes
+  in  (newRootId, newNodes)
 
 
-setParentNodeIds : Maybe Int -> Int -> Document tData -> Array (Maybe Int) -> Array (Maybe Int)
-setParentNodeIds parentId nodeId document parentIds =
-  let updatedParents = Array.set nodeId parentId parentIds 
-      childIds = document |> Document.childrenOf nodeId
-      setChildsParent childId parentIds = setParentNodeIds (Just nodeId) childId document parentIds
-  in  List.foldl setChildsParent updatedParents childIds
+getParentNodeIds : Maybe Int -> Int -> Array (Node tData) -> Array (Maybe Int) -> Array (Maybe Int)
+getParentNodeIds parentId nodeId nodes parentIds =
+  let updatedParents = Array.set nodeId parentId parentIds
+      maybeNode = Array.get nodeId nodes
+      maybeChildIds = Maybe.map (\node -> node.childIds) maybeNode
+      childIds = Maybe.withDefault [] maybeChildIds
+      getChildsParent childId parentIds = getParentNodeIds (Just nodeId) childId nodes parentIds
+  in  List.foldl getChildsParent updatedParents childIds
