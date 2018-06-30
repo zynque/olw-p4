@@ -71,7 +71,7 @@ view : Model -> Html Msg
 view model =
   div []
     [ 
-      svgExample,
+      svgExample workingDoc,
 
       p [] [ text "." ],
       p [] [ text (toString detachedDoc)],
