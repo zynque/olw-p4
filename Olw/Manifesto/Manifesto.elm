@@ -4,6 +4,13 @@
 module Main exposing (..)
 
 
+type alias Manifesto =
+    { title : String
+    , summary : String
+    , principles : List TopLevelPrinciple
+    }
+
+
 type alias TopLevelPrinciple =
     { label : String
     , children : List OLWPrinciple
@@ -13,27 +20,25 @@ type alias TopLevelPrinciple =
 type alias OLWPrinciple =
     { header : String
     , description : String
+    , implementationHints : String
     }
 
 
-type alias Manifesto =
-    { title : String
-    , summary : String
-    , principles : List TopLevelPrinciple
+manifesto : Manifesto
+manifesto =
+    { title = "The Open Language Web Manifesto"
+    , summary = ""
+    , principles = principles
     }
-
-
-
--- "Every piece of creativity/productivity software should carry with it a full integrated development environment, so that the software can be rewritten from directly within the application itself."
 
 
 principles : List TopLevelPrinciple
 principles =
-    [ { label = "Open & Transparent"
+    [ { label = "Frictionless & Open"
       , children =
             [ { header = "Open Source", description = "" }
-            , { header = "Transparent", description = "Every piece of creativity/productivity software should carry with it a full integrated development environment, so that the software can be rewritten from directly within the application itself." }
-            , { header = "Inherit", description = "" }
+            , { header = "Frictionless", description = "Every piece of creativity/productivity software should carry with it a full integrated development environment, so that the software can be rewritten from directly within the application itself." }
+            , { header = "Inherit", description = "By default, applications built using this platform should inherit all the capabilities of the platform itself - thus upholding all the principles described here. Applications may chose to opt out of some or all of these features where it makes sense to do so." }
             ]
       }
     , { label = "Language Oriented"
@@ -54,11 +59,3 @@ principles =
             ]
       }
     ]
-
-
-manifesto : Manifesto
-manifesto =
-    { title = "The Open Language Web Manifesto"
-    , summary = ""
-    , principles = principles
-    }
