@@ -70,6 +70,7 @@ cutNode nodeId document =
             { version = node.version + 1
             , data = node.data
             , childIds = List.filter (\i -> i /= nodeId) node.childIds
+            , parentId = node.parentId
             }
 
         clearParent =
@@ -122,6 +123,7 @@ offsetNodeBy offset node =
     { version = node.version
     , data = node.data
     , childIds = newChildIds
+    , parentId = node.parentId
     }
 
 
@@ -172,6 +174,7 @@ addChildToParentInDoc parentId childId index doc =
             { version = node.version + 1
             , data = node.data
             , childIds = listInsertBefore index childId node.childIds
+            , parentId = node.parentId
             }
     in
     transformNodeContent parentId update doc
@@ -193,7 +196,7 @@ updateNodeData :
 updateNodeData nodeId newData oldDoc =
     let
         transform node =
-            { version = node.version + 1, data = newData, childIds = node.childIds }
+            { version = node.version + 1, data = newData, childIds = node.childIds, parentId = node.parentId }
     in
     transformNodeContent nodeId transform oldDoc
 
@@ -206,7 +209,7 @@ updateNodeChildIds :
 updateNodeChildIds nodeId newChildIds oldDoc =
     let
         transform node =
-            { version = node.version + 1, data = node.data, childIds = newChildIds }
+            { version = node.version + 1, data = node.data, childIds = newChildIds, parentId = node.parentId }
     in
     transformNodeContent nodeId transform oldDoc
 

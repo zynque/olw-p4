@@ -32,7 +32,7 @@ type alias Document tData =
 
 
 type alias Node tData =
-    { version : Int, data : tData, childIds : List Int }
+    { version : Int, data : tData, childIds : List Int, parentId : Maybe Int }
 
 
 getNode : Int -> Document tData -> Maybe (Node tData)

@@ -16,7 +16,11 @@ beginDocument data =
     { rootId = 0
     , nodes =
         Array.fromList
-            [ { version = 0, data = data, childIds = [] }
+            [ { version = 0
+              , data = data
+              , childIds = []
+              , parentId = Nothing
+              }
             ]
     , parentIds = Array.empty
     }
@@ -75,7 +79,7 @@ addDetachedNode detachedNode nodes =
             List.reverse childIdsInReverse
 
         newNode =
-            { version = 0, data = data, childIds = childIds }
+            { version = 0, data = data, childIds = childIds, parentId = Nothing }
 
         newNodes =
             Array.push newNode decendantNodes
