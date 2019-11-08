@@ -10,6 +10,7 @@ import Olw.Document.Detached as Detached exposing (..)
 import Olw.Document.Edit as Edit exposing (..)
 import Olw.Document.Show as Show exposing (..)
 import Olw.Manifesto.Manifesto exposing (manifesto)
+import Olw.UI.DocumentTreeDiagram exposing (svgExample)
 
 
 main =

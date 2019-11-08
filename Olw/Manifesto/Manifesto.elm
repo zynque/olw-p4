@@ -20,7 +20,6 @@ type alias TopLevelPrinciple =
 type alias OLWPrinciple =
     { header : String
     , description : String
-    , implementationHints : String
     }
 
 
