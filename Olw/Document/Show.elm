@@ -43,9 +43,19 @@ showNode : Node NodeData -> String
 showNode node =
     let
         content =
-            "d:(" ++ showNodeData node.data ++ ") c:(" ++ join "," (List.map toString node.childIds) ++ ")"
+            "d:(" ++ showNodeData node.data ++ ") " ++ "p:(" ++ showParentId node.parentId ++ ")" ++ "c:(" ++ join "," (List.map toString node.childIds) ++ ")"
     in
     "v:" ++ toString node.version ++ " - " ++ content
+
+
+showParentId : Maybe Int -> String
+showParentId id =
+    case id of
+        Just i ->
+            toString i
+
+        Nothing ->
+            ""
 
 
 showNodeData : NodeData -> String

@@ -13,28 +13,24 @@ import String exposing (join)
 
 beginDocument : tData -> Document tData
 beginDocument data =
-    { rootId = 0
-    , nodes =
-        Array.fromList
+    { emptyDocument |
+      nodes = Array.fromList
             [ { version = 0
               , data = data
               , childIds = []
               , parentId = Nothing
               }
             ]
-    , parentIds = Array.empty
     }
-
-
-emptyDocument =
-    { rootId = 0, nodes = Array.fromList [], parentIds = Array.empty }
 
 
 buildDocument : DetachedNode tData -> Document tData
 buildDocument detached =
     let
+        detachedWithIds = assignIds detached
+
         ( rootId, nodes ) =
-            addDetachedNode detached Array.empty
+            addDetachedNode Nothing detachedWithIds Array.empty
 
         emptyParentIds =
             Array.repeat (Array.length nodes) Nothing
@@ -48,6 +44,45 @@ buildDocument detached =
     }
 
 
+emptyDocument =
+    { rootId = 0, nodes = Array.fromList [], parentIds = Array.empty }
+
+
+type alias DetachedNodeWithId tData =
+    { id: Int, data : tData, children: DetachedChildrenWithIds tData}
+
+
+type DetachedChildrenWithIds tData =
+    DetachedChildrenWithIds (List (DetachedNodeWithId tData))
+
+
+assignIds : DetachedNode tData -> DetachedNodeWithId tData
+assignIds node = 
+    let
+        ( _, detachedNodeWithId ) = assignIdsFrom 0 node
+    in
+        detachedNodeWithId
+
+
+assignIdsFrom : Int -> DetachedNode tData -> (Int, DetachedNodeWithId tData)
+assignIdsFrom startingId node =
+    let
+        { data, detachedChildren } = node
+
+        (DetachedChildren children) = detachedChildren
+
+        accumulateAssignedIds child (start, childrenWithIds) =
+            let
+                (nextId, childWithAssignedId) = assignIdsFrom start child
+            in
+                (nextId, childWithAssignedId :: childrenWithIds)
+
+        (nextId, reversedChildrenWithIds) = List.foldl accumulateAssignedIds (startingId, []) children
+
+        childrenWithIds = List.reverse reversedChildrenWithIds
+    in
+        (nextId + 1, { id = nextId, data = data, children = DetachedChildrenWithIds childrenWithIds })
+
 
 -- addDetachedNode
 -- recursive helper method takes doc of nodes added so far
@@ -56,30 +91,28 @@ buildDocument detached =
 -- parentIds is left empty to be filled in later
 
 
-addDetachedNode : DetachedNode tData -> Array (Node tData) -> ( Int, Array (Node tData) )
-addDetachedNode detachedNode nodes =
+addDetachedNode : Maybe Int -> DetachedNodeWithId tData -> Array (Node tData) -> ( Int, Array (Node tData) )
+addDetachedNode parentId detachedNode nodes =
     let
-        { data, detachedChildren } =
-            detachedNode
+        { id, data, children } = detachedNode
 
-        (DetachedChildren children) =
-            detachedChildren
+        (DetachedChildrenWithIds children2) = children
 
         addChild detached ( ids, nodes ) =
             let
                 ( newRootId, newNodes ) =
-                    addDetachedNode detached nodes
+                    addDetachedNode (Just id) detached nodes
             in
             ( newRootId :: ids, newNodes )
 
         ( childIdsInReverse, decendantNodes ) =
-            List.foldl addChild ( [], nodes ) children
+            List.foldl addChild ( [], nodes ) children2
 
         childIds =
             List.reverse childIdsInReverse
 
         newNode =
-            { version = 0, data = data, childIds = childIds, parentId = Nothing }
+            { version = 0, data = data, childIds = childIds, parentId = parentId }
 
         newNodes =
             Array.push newNode decendantNodes
