@@ -26,17 +26,11 @@ insertNode detachedNode parentId index document =
         docToMerge =
             Build.buildDocument detachedNode
 
-        parentIdsToMerge =
-            docToMerge.parentIds
-
         originalNodesLength =
             Array.length document.nodes
 
         docAfterOffset =
             offsetDocBy originalNodesLength docToMerge
-
-        parentIdsAfterOffset =
-            offsetParentsBy originalNodesLength parentIdsToMerge
 
         newNodeId =
             docAfterOffset.rootId
@@ -44,7 +38,6 @@ insertNode detachedNode parentId index document =
         docWithAddedNodes =
             { rootId = document.rootId
             , nodes = Array.append document.nodes docAfterOffset.nodes
-            , parentIds = Array.append document.parentIds parentIdsAfterOffset
             }
 
         docResult =
@@ -64,7 +57,8 @@ cutNode : Int -> Document tData -> Result String (Document tData)
 cutNode nodeId document =
     let
         maybeParentId =
-            maybeFlatten (Array.get nodeId document.parentIds)
+            getNode nodeId document
+                |> Maybe.andThen (\n -> n.parentId)
 
         updateParentContent node =
             { version = node.version + 1
@@ -72,14 +66,10 @@ cutNode nodeId document =
             , childIds = List.filter (\i -> i /= nodeId) node.childIds
             , parentId = node.parentId
             }
-
-        clearParent =
-            Array.set nodeId Nothing
     in
     case maybeParentId of
         Just parentId ->
             document
-                |> transformParentIds clearParent
                 |> transformNodeContent parentId updateParentContent
 
         Nothing ->
@@ -98,20 +88,8 @@ pasteNode :
     -> Document tData
     -> Result String (Document tData)
 pasteNode nodeId parentId index document =
-    let
-        currentParent =
-            maybeFlatten (Array.get nodeId document.parentIds)
-    in
-    case currentParent of
-        Just id ->
-            Err ("Edit.pasteNode: Node with id: " ++ toString nodeId ++ " is already attached to document")
-
-        _ ->
-            let
-                doc =
-                    setNodesParent nodeId parentId document
-            in
-            doc |> Result.andThen (\d -> addChildToParentInDoc parentId nodeId index d)
+    setNodesParent nodeId parentId document
+        |> Result.andThen (\d -> addChildToParentInDoc parentId nodeId index d)
 
 
 offsetNodeBy : Int -> Node tData -> Node tData
@@ -123,7 +101,7 @@ offsetNodeBy offset node =
     { version = node.version
     , data = node.data
     , childIds = newChildIds
-    , parentId = node.parentId
+    , parentId = Maybe.map (\id -> id + offset) node.parentId -- todo: test this
     }
 
 
@@ -144,7 +122,6 @@ offsetDocBy offset doc =
     in
     { rootId = doc.rootId + offset
     , nodes = offsetVersionedNodes
-    , parentIds = Array.empty
     }
 
 
@@ -183,16 +160,10 @@ addChildToParentInDoc parentId childId index doc =
 setNodesParent : Int -> Int -> Document tData -> Result String (Document tData)
 setNodesParent nodeId newParentId document =
     let
-        temp =
-            { rootId = document.rootId
-            , nodes = document.nodes
-            , parentIds = Array.set nodeId (Just newParentId) document.parentIds
-            }
-
         update n =
             { n | parentId = Just newParentId }
     in
-    transformNode nodeId update temp
+    transformNode nodeId update document
 
 
 updateNodeData :
@@ -256,21 +227,9 @@ transformNode nodeId update document =
                 newDoc =
                     { rootId = document.rootId
                     , nodes = newVersionedNodes
-                    , parentIds = document.parentIds
                     }
             in
             Ok newDoc
 
         _ ->
             Err ("DocumentV.updateNode: Node id: " ++ toString nodeId ++ " does not exist in document")
-
-
-transformParentIds :
-    (Array (Maybe Int) -> Array (Maybe Int))
-    -> Document tData
-    -> Document tData
-transformParentIds transform document =
-    { rootId = document.rootId
-    , nodes = document.nodes
-    , parentIds = transform document.parentIds
-    }

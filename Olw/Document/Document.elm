@@ -26,8 +26,6 @@ type alias Document tData =
       rootId : Int
     , -- indexed by node id
       nodes : Array (Node tData)
-    , -- indexed by node id, gives that node's parent id
-      parentIds : Array (Maybe Int)
     }
 
 
@@ -54,7 +52,8 @@ childrenOf nodeId doc =
 
 parentOf : Int -> Document tData -> Maybe Int
 parentOf nodeId doc =
-    maybeFlatten (Array.get nodeId doc.parentIds)
+    getNode nodeId doc
+        |> Maybe.andThen (\n -> n.parentId)
 
 
 pathFromRootTo : Int -> Document tData -> List Int

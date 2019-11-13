@@ -32,11 +32,8 @@ showDocument document =
 
         displayedChildren =
             List.map displayChild indexedChildren
-
-        displayedParentIds =
-            " parents:" ++ toString (Array.toIndexedList document.parentIds)
     in
-    ("root:" ++ toString document.rootId ++ displayedParentIds) :: displayedChildren
+    ("root:" ++ toString document.rootId) :: displayedChildren
 
 
 showNode : Node NodeData -> String

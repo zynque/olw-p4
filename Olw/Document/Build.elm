@@ -13,21 +13,23 @@ import String exposing (join)
 
 beginDocument : tData -> Document tData
 beginDocument data =
-    { emptyDocument |
-      nodes = Array.fromList
-            [ { version = 0
-              , data = data
-              , childIds = []
-              , parentId = Nothing
-              }
-            ]
+    { emptyDocument
+        | nodes =
+            Array.fromList
+                [ { version = 0
+                  , data = data
+                  , childIds = []
+                  , parentId = Nothing
+                  }
+                ]
     }
 
 
 buildDocument : DetachedNode tData -> Document tData
 buildDocument detached =
     let
-        detachedWithIds = assignIds detached
+        detachedWithIds =
+            assignIds detached
 
         ( rootId, nodes ) =
             addDetachedNode Nothing detachedWithIds Array.empty
@@ -40,48 +42,54 @@ buildDocument detached =
     in
     { rootId = rootId
     , nodes = nodes
-    , parentIds = parentIds
     }
 
 
 emptyDocument =
-    { rootId = 0, nodes = Array.fromList [], parentIds = Array.empty }
+    { rootId = 0, nodes = Array.fromList [] }
 
 
 type alias DetachedNodeWithId tData =
-    { id: Int, data : tData, children: DetachedChildrenWithIds tData}
+    { id : Int, data : tData, children : DetachedChildrenWithIds tData }
 
 
-type DetachedChildrenWithIds tData =
-    DetachedChildrenWithIds (List (DetachedNodeWithId tData))
+type DetachedChildrenWithIds tData
+    = DetachedChildrenWithIds (List (DetachedNodeWithId tData))
 
 
 assignIds : DetachedNode tData -> DetachedNodeWithId tData
-assignIds node = 
+assignIds node =
     let
-        ( _, detachedNodeWithId ) = assignIdsFrom 0 node
+        ( _, detachedNodeWithId ) =
+            assignIdsFrom 0 node
     in
-        detachedNodeWithId
+    detachedNodeWithId
 
 
-assignIdsFrom : Int -> DetachedNode tData -> (Int, DetachedNodeWithId tData)
+assignIdsFrom : Int -> DetachedNode tData -> ( Int, DetachedNodeWithId tData )
 assignIdsFrom startingId node =
     let
-        { data, detachedChildren } = node
+        { data, detachedChildren } =
+            node
 
-        (DetachedChildren children) = detachedChildren
+        (DetachedChildren children) =
+            detachedChildren
 
-        accumulateAssignedIds child (start, childrenWithIds) =
+        accumulateAssignedIds child ( start, childrenWithIds ) =
             let
-                (nextId, childWithAssignedId) = assignIdsFrom start child
+                ( nextId, childWithAssignedId ) =
+                    assignIdsFrom start child
             in
-                (nextId, childWithAssignedId :: childrenWithIds)
+            ( nextId, childWithAssignedId :: childrenWithIds )
 
-        (nextId, reversedChildrenWithIds) = List.foldl accumulateAssignedIds (startingId, []) children
+        ( nextId, reversedChildrenWithIds ) =
+            List.foldl accumulateAssignedIds ( startingId, [] ) children
 
-        childrenWithIds = List.reverse reversedChildrenWithIds
+        childrenWithIds =
+            List.reverse reversedChildrenWithIds
     in
-        (nextId + 1, { id = nextId, data = data, children = DetachedChildrenWithIds childrenWithIds })
+    ( nextId + 1, { id = nextId, data = data, children = DetachedChildrenWithIds childrenWithIds } )
+
 
 
 -- addDetachedNode
@@ -94,9 +102,11 @@ assignIdsFrom startingId node =
 addDetachedNode : Maybe Int -> DetachedNodeWithId tData -> Array (Node tData) -> ( Int, Array (Node tData) )
 addDetachedNode parentId detachedNode nodes =
     let
-        { id, data, children } = detachedNode
+        { id, data, children } =
+            detachedNode
 
-        (DetachedChildrenWithIds children2) = children
+        (DetachedChildrenWithIds children2) =
+            children
 
         addChild detached ( ids, nodes ) =
             let
