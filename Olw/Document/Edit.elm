@@ -47,10 +47,10 @@ insertNode detachedNode parentId index document =
             , parentIds = Array.append document.parentIds parentIdsAfterOffset
             }
 
-        doc =
+        docResult =
             setNodesParent newNodeId parentId docWithAddedNodes
     in
-    addChildToParentInDoc parentId newNodeId index doc
+    docResult |> Result.andThen (\doc -> addChildToParentInDoc parentId newNodeId index doc)
 
 
 
@@ -111,7 +111,7 @@ pasteNode nodeId parentId index document =
                 doc =
                     setNodesParent nodeId parentId document
             in
-            addChildToParentInDoc parentId nodeId index doc
+            doc |> Result.andThen (\d -> addChildToParentInDoc parentId nodeId index d)
 
 
 offsetNodeBy : Int -> Node tData -> Node tData
@@ -180,12 +180,19 @@ addChildToParentInDoc parentId childId index doc =
     transformNodeContent parentId update doc
 
 
-setNodesParent : Int -> Int -> Document tData -> Document tData
+setNodesParent : Int -> Int -> Document tData -> Result String (Document tData)
 setNodesParent nodeId newParentId document =
-    { rootId = document.rootId
-    , nodes = document.nodes
-    , parentIds = Array.set nodeId (Just newParentId) document.parentIds
-    }
+    let
+        temp =
+            { rootId = document.rootId
+            , nodes = document.nodes
+            , parentIds = Array.set nodeId (Just newParentId) document.parentIds
+            }
+
+        update n =
+            { n | parentId = Just newParentId }
+    in
+    transformNode nodeId update temp
 
 
 updateNodeData :
@@ -212,6 +219,10 @@ updateNodeChildIds nodeId newChildIds oldDoc =
             { version = node.version + 1, data = node.data, childIds = newChildIds, parentId = node.parentId }
     in
     transformNodeContent nodeId transform oldDoc
+
+
+
+-- Redundant - remove
 
 
 transformNodeContent :

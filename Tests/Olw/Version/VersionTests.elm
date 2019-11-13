@@ -23,7 +23,7 @@ expectedNode1 =
     { version = 0
     , data = expectedVersion1
     , childIds = []
-    , parentId = Nothing
+    , parentId = Just 0
     }
 
 
@@ -37,7 +37,7 @@ actualNode1 =
 expectedVersion2 =
     { mergedFromNodeId = Nothing
     , data = "1b"
-    , lsaNodeId = Just 0
+    , lsaNodeId = Just 1
     }
 
 
@@ -45,7 +45,7 @@ expectedNode2 =
     { version = 0
     , data = expectedVersion2
     , childIds = []
-    , parentId = Nothing
+    , parentId = Just 1
     }
 
 
@@ -53,7 +53,7 @@ actualNode2 : Result String (Node (Version String))
 actualNode2 =
     initialVersionDoc
         |> update 0 "1a"
-        |> Result.andThen (update 0 "1b")
+        |> Result.andThen (update 1 "1b")
         |> Result.andThen (Document.getNode 2 >> Result.fromMaybe "node not found")
 
 
