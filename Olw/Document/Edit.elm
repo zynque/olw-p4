@@ -35,10 +35,11 @@ insertNode detachedNode parentId index document =
         newNodeId =
             docAfterOffset.rootId
 
+        addedNodes =
+            Array.append document.nodes docAfterOffset.nodes
+
         docWithAddedNodes =
-            { rootId = document.rootId
-            , nodes = Array.append document.nodes docAfterOffset.nodes
-            }
+            { document | nodes = addedNodes }
 
         docResult =
             setNodesParent newNodeId parentId docWithAddedNodes
@@ -61,16 +62,15 @@ cutNode nodeId document =
                 |> Maybe.andThen (\n -> n.parentId)
 
         updateParentContent node =
-            { version = node.version + 1
-            , data = node.data
-            , childIds = List.filter (\i -> i /= nodeId) node.childIds
-            , parentId = node.parentId
+            { node
+                | version = node.version + 1
+                , childIds = List.filter (\i -> i /= nodeId) node.childIds
             }
     in
     case maybeParentId of
         Just parentId ->
             document
-                |> transformNodeContent parentId updateParentContent
+                |> transformNode parentId updateParentContent
 
         Nothing ->
             Err ("Edit.cutNode: could not lookup parent of node with id: " ++ toString nodeId)
@@ -78,7 +78,8 @@ cutNode nodeId document =
 
 
 -- paste a node that was previously cut in a new location in the document
--- will result in error if the node already exists in document
+-- WARNING: can break tree if the node already exists in document
+-- perhaps replace cut/paste with an atomic move operation?
 
 
 pasteNode :
@@ -98,20 +99,15 @@ offsetNodeBy offset node =
         newChildIds =
             List.map (\n -> n + offset) node.childIds
     in
-    { version = node.version
-    , data = node.data
-    , childIds = newChildIds
-    , parentId = Maybe.map (\id -> id + offset) node.parentId -- todo: test this
+    { node
+        | childIds = newChildIds
+        , parentId = Maybe.map (\id -> id + offset) node.parentId -- todo: test this
     }
 
 
 offsetNodesBy : Int -> Array (Node tData) -> List (Node tData)
 offsetNodesBy offset nodes =
-    let
-        nodesList =
-            Array.toList nodes
-    in
-    List.map (offsetNodeBy offset) nodesList
+    List.map (offsetNodeBy offset) (Array.toList nodes)
 
 
 offsetDocBy : Int -> Document tData -> Document tData
@@ -126,17 +122,8 @@ offsetDocBy offset doc =
 
 
 offsetParentsBy : Int -> Array (Maybe Int) -> Array (Maybe Int)
-offsetParentsBy offset parents =
-    let
-        applyOffset maybeParent =
-            case maybeParent of
-                Just parentId ->
-                    Just (parentId + offset)
-
-                Nothing ->
-                    Nothing
-    in
-    Array.map applyOffset parents
+offsetParentsBy offset parentIds =
+    Array.map (Maybe.map (\parentId -> parentId + offset)) parentIds
 
 
 addChildToParentInDoc :
@@ -147,23 +134,22 @@ addChildToParentInDoc :
     -> Result String (Document tData)
 addChildToParentInDoc parentId childId index doc =
     let
-        update node =
-            { version = node.version + 1
-            , data = node.data
-            , childIds = listInsertBefore index childId node.childIds
-            , parentId = node.parentId
+        addChild node =
+            { node
+                | version = node.version + 1
+                , childIds = listInsertBefore index childId node.childIds
             }
     in
-    transformNodeContent parentId update doc
+    transformNode parentId addChild doc
 
 
 setNodesParent : Int -> Int -> Document tData -> Result String (Document tData)
 setNodesParent nodeId newParentId document =
     let
-        update n =
+        setParent n =
             { n | parentId = Just newParentId }
     in
-    transformNode nodeId update document
+    transformNode nodeId setParent document
 
 
 updateNodeData :
@@ -174,9 +160,12 @@ updateNodeData :
 updateNodeData nodeId newData oldDoc =
     let
         transform node =
-            { version = node.version + 1, data = newData, childIds = node.childIds, parentId = node.parentId }
+            { node
+                | version = node.version + 1
+                , data = newData
+            }
     in
-    transformNodeContent nodeId transform oldDoc
+    transformNode nodeId transform oldDoc
 
 
 updateNodeChildIds :
@@ -187,22 +176,12 @@ updateNodeChildIds :
 updateNodeChildIds nodeId newChildIds oldDoc =
     let
         transform node =
-            { version = node.version + 1, data = node.data, childIds = newChildIds, parentId = node.parentId }
+            { node
+                | version = node.version + 1
+                , childIds = newChildIds
+            }
     in
-    transformNodeContent nodeId transform oldDoc
-
-
-
--- Redundant - remove
-
-
-transformNodeContent :
-    Int
-    -> (Node tData -> Node tData)
-    -> Document tData
-    -> Result String (Document tData)
-transformNodeContent nodeId updateContent oldDoc =
-    transformNode nodeId updateContent oldDoc
+    transformNode nodeId transform oldDoc
 
 
 transformNode :

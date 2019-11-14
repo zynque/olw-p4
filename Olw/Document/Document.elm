@@ -22,10 +22,8 @@ import String exposing (join)
 
 
 type alias Document tData =
-    { -- index of root node in nodes array
-      rootId : Int
-    , -- indexed by node id
-      nodes : Array (Node tData)
+    { rootId : Int -- index of root node in nodes array
+    , nodes : Array (Node tData) -- indexed by node id
     }
 
 

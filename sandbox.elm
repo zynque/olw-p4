@@ -117,11 +117,6 @@ wd3u =
         |> Result.andThen (Edit.pasteNode 0 4 1)
 
 
-wd3failedUpdate =
-    wd3
-        |> Edit.pasteNode 0 4 1
-
-
 view : Model -> Html Msg
 view model =
     div []
@@ -136,7 +131,5 @@ view model =
         , showWDocR wd2u
         , p [] [ text "." ]
         , showWDocR wd3u
-        , p [] [ text "." ]
-        , showWDocR wd3failedUpdate
         , p [] [ text "." ]
         ]

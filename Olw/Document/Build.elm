@@ -40,9 +40,7 @@ buildDocument detached =
         parentIds =
             getParentNodeIds Nothing rootId nodes emptyParentIds
     in
-    { rootId = rootId
-    , nodes = nodes
-    }
+    { rootId = rootId, nodes = nodes }
 
 
 emptyDocument =
@@ -88,7 +86,12 @@ assignIdsFrom startingId node =
         childrenWithIds =
             List.reverse reversedChildrenWithIds
     in
-    ( nextId + 1, { id = nextId, data = data, children = DetachedChildrenWithIds childrenWithIds } )
+    ( nextId + 1
+    , { id = nextId
+      , data = data
+      , children = DetachedChildrenWithIds childrenWithIds
+      }
+    )
 
 
 
